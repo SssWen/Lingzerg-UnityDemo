@@ -1,0 +1,194 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: IllustractionToonShader_ITS_Standard
+  m_Shader: {fileID: 4800000, guid: a0068337f2220224d9bd35d5d4cd2992, type: 3}
+  m_ShaderKeywords: _DIFFUSELIGHTCOLOR_ON _ITS_CLIPPING_NONE _ITS_OUTLINE_BLEND_MAIN_NONE
+    _ITS_OUTLINE_NORMAL _ITS_SPECULAR_NONE _MATCAPBLENDADD_ON _MATCAPLIGHTCOLOR_ON
+    _RIMANTIPODEANLIGHTCOLOR_ON _RIMLIGHTCOLOR_ON _SHADOWTOMAIN_ON _SPECULARLIGHTCOLOR_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _ClippingMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DiffuseBrushTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DiffuseHighTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DiffuseLowTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DiffuseMiddleTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DiffuseRampTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissiveTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GlitterTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MaskTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MatCapNormalTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MatCapTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NormalTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OutlineColorTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OutlineMaskTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RimBrushTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShiftTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecularBrushTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecularPrimaryTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecularRampTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecularSecondaryTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _ClippingInverse: 0
+    - _ClippingLevel: 0
+    - _CullMode: 2
+    - _DiffuseBrushStrength: 1
+    - _DiffuseHighSmoothness: 0.0001
+    - _DiffuseHighThreshold: 0.2
+    - _DiffuseLightColor: 1
+    - _DiffuseLowSmoothness: 0.0001
+    - _DiffuseLowThreshold: 0.6
+    - _DiffuseMiddleSmoothness: 0.0001
+    - _DiffuseMiddleThreshold: 0.4
+    - _FarthestDistance: 10
+    - _GIThreshold: 0
+    - _ITS_CLIPPING: 0
+    - _ITS_DIFFUSE_TEX: 0
+    - _ITS_EMISSIVE: 0
+    - _ITS_GI: 0
+    - _ITS_GLITTER_TEX: 0
+    - _ITS_MASK_TEX: 0
+    - _ITS_MATCAP: 0
+    - _ITS_MATCAP_NORMAL_TEX: 0
+    - _ITS_NORMAL_TEX: 0
+    - _ITS_OUTLINE: 0
+    - _ITS_OUTLINE_BLEND_MAIN: 0
+    - _ITS_OUTLINE_COLOR_TEX: 0
+    - _ITS_OUTLINE_MASK_TEX: 0
+    - _ITS_RAMP_TEX: 0
+    - _ITS_RIM_ENVIRONMENT: 0
+    - _ITS_RIM_LIGHT: 0
+    - _ITS_SHIFT_TEX: 0
+    - _ITS_SPECULAR: 0
+    - _ITS_SPECULAR_DOUBLE: 0
+    - _ITS_SPECULAR_TEX: 0
+    - _MatCapBlendAdd: 1
+    - _MatCapLightColor: 1
+    - _MatCapNormalUVRotate: 0
+    - _MatCapOnShadow: 0
+    - _MatCapShadowThreshold: 0
+    - _MatCapUVRotate: 0
+    - _MatCapUVThreshold: 0
+    - _NearestDistance: 0.5
+    - _OffsetZ: 0
+    - _OutlineWidth: 9.19
+    - _RimAntipodean: 0
+    - _RimAntipodeanLightColor: 1
+    - _RimAntipodeanPower: 0.1
+    - _RimAntipodeanToon: 0
+    - _RimBrushThreshold: 0
+    - _RimInsideMask: 0.0001
+    - _RimLightColor: 1
+    - _RimLightMask: 0
+    - _RimLightMaskThreshold: 0
+    - _RimPower: 0.1
+    - _RimToon: 0
+    - _ShadowThreshold: 0
+    - _ShadowToMain: 1
+    - _SpecularBrushStrength: 1
+    - _SpecularJitter: 1
+    - _SpecularLightColor: 1
+    - _SpecularPrimaryGlitter: 0
+    - _SpecularPrimaryOnShadow: 0
+    - _SpecularPrimaryPower: 0
+    - _SpecularPrimaryShadowThreshold: 0
+    - _SpecularPrimaryShift: 0
+    - _SpecularPrimaryStrength: 0
+    - _SpecularPrimaryToon: 0
+    - _SpecularSecondaryGlitter: 0
+    - _SpecularSecondaryOnShadow: 0
+    - _SpecularSecondaryPower: 0
+    - _SpecularSecondaryShadowThreshold: 0
+    - _SpecularSecondaryShift: 0
+    - _SpecularSecondaryStrength: 0
+    - _SpecularSecondaryToon: 0
+    - _SpecularShift: 0.8
+    m_Colors:
+    - _DiffuseHighColor: {r: 1, g: 1, b: 1, a: 1}
+    - _DiffuseLowColor: {r: 1, g: 1, b: 1, a: 1}
+    - _DiffuseMiddleColor: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissiveColor: {r: 0, g: 0, b: 0, a: 1}
+    - _MainColor: {r: 1, g: 1, b: 1, a: 1}
+    - _MatCapColor: {r: 1, g: 1, b: 1, a: 1}
+    - _OutlineColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _RimAntipodeanColor: {r: 1, g: 1, b: 1, a: 1}
+    - _RimColor: {r: 1, g: 1, b: 1, a: 1}
+    - _SpecularPrimaryColor: {r: 1, g: 1, b: 1, a: 1}
+    - _SpecularSecondaryColor: {r: 1, g: 1, b: 1, a: 1}
