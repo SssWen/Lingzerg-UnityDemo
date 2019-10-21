@@ -13,7 +13,7 @@
 		_RampIn("Ramp In", Range(0.01,1)) = 0.2
 
 		[Space(50)]
-		[Header(MetallicAndSmoothness)]
+		[Header(Metallic)]
 		[Gamma] _Metallic("Metallic", Range(0, 1)) = 0 //金属度要经过伽马校正
 		//_Smoothness("Smoothness", Range(0, 1)) = 0.5
 
@@ -360,7 +360,7 @@
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
 
 				fixed3 finalColor = (ambient + diffuse + specular);
-				fresnel = lerp(0,fresnel,mask.r);
+				fresnel = lerp(0,fresnel,mask.g);
 
 				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a, 1);
             }
