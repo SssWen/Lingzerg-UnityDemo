@@ -4,7 +4,7 @@
     {
 		//*** 完成 *** 1 高光颜色 和 暗部颜色 固有色 + 滑块
 		//*** 完成 *** 2 环境映射 支持反射球和天空盒反射
-		//3 顶点色做mask 控制法线映射球
+		//*** 完成 *** 3 顶点色做mask 控制法线映射球
 		[Header(Color)]
         _MainTex ("Texture", 2D) = "white" {}
 
@@ -45,6 +45,13 @@
 		_OutlineWidth("Outline Width", Float) = 0.01
 		_Scale("_Scale", Float) = 1
 
+		/** Special - 特殊功能 - 顶点色控制顶点法线朝向质心 **/
+		[Space(50)]
+		[Header(VertexColorControllPosPoint)]
+		_R ("R 的质心坐标", Vector) = (0, 0, 0, 1)
+		_G ("G 的质心坐标", Vector) = (0, 0, 0, 1)
+		_B ("B 的质心坐标", Vector) = (0, 0, 0, 1)
+		
 		/** Special - 特殊功能 - Finil **/
 		[Space(50)]
 		[Header(FresnelMetallic)]
@@ -250,7 +257,7 @@
             {
                 float4 vertex : POSITION;
 				fixed3 normal : NORMAL;
-				fixed4 tangent : TANGENT;
+				//fixed4 tangent : TANGENT;
 				fixed4 color : COLOR;
                 float2 uv : TEXCOORD0;
             };
@@ -261,12 +268,12 @@
 				fixed4 color : COLOR;
                 float2 uv : TEXCOORD0;
 				fixed3 normal : TEXCOORD1;
-			#if defined(BINORMAL_PER_FRAGMENT) //是否计算次法线
-				fixed4 tangent : TEXCOORD2;
-			#else 
-				fixed3 tangent : TEXCOORD2;
-				fixed3 binormal : TEXCOORD3;
-			#endif
+			//#if defined(BINORMAL_PER_FRAGMENT) //是否计算次法线
+			//	fixed4 tangent : TEXCOORD2;
+			//#else 
+			//	fixed3 tangent : TEXCOORD2;
+			//	fixed3 binormal : TEXCOORD3;
+			//#endif
 				fixed3 worldPos : TEXCOORD4;
 				float3 worldNormal : TEXCOORD5;
             };
@@ -298,23 +305,33 @@
 			fixed _FresnelPow;
 			fixed4 _FresnelCol;
 
-			#include "InitNormal.cginc"
+			fixed4 _R,_G,_B;
+
+			//#include "InitNormal.cginc"
 
             Interpolators MyVertexProgram (VertexData v)
             {
                 Interpolators i = (Interpolators)0;
                 i.pos = UnityObjectToClipPos(v.vertex);
+
 				i.worldPos.xyz = mul(unity_ObjectToWorld, v.vertex);
                 i.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				i.color = v.color;
-				i.normal = UnityObjectToWorldNormal(v.normal);
-				i.worldNormal  = UnityObjectToWorldNormal(v.normal);
-			#if defined(BINORMAL_PER_FRAGMENT)
-				i.tangent = fixed4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
-			#else
-				i.tangent = UnityObjectToWorldDir(v.tangent.xyz);
-				i.binormal = CreateBinormal(i.normal, i.tangent, v.tangent.w);
-			#endif
+				
+				//i.normal = UnityObjectToWorldNormal(v.normal);
+				//i.worldNormal  = UnityObjectToWorldNormal(v.normal);
+				i.normal = normalize(lerp(UnityObjectToWorldNormal(v.normal),v.vertex.xyz-_R.rgb, v.color.r));
+				i.normal = normalize(lerp(i.normal,v.vertex.xyz-_G.rgb, v.color.g));
+				i.normal = normalize(lerp(i.normal,v.vertex.xyz-_B.rgb, v.color.b));
+
+				i.worldNormal = i.normal;
+				
+			//#if defined(BINORMAL_PER_FRAGMENT)
+			//	i.tangent = fixed4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
+			//#else
+			//	i.tangent = UnityObjectToWorldDir(v.tangent.xyz);
+			//	i.binormal = CreateBinormal(i.normal, i.tangent, v.tangent.w);
+			//#endif
 				
                 return i;
             }
@@ -326,7 +343,8 @@
 				return _LightColor0.rgb * albedo * lerp(_BrightColor.rgb, _DarkColor.rgb,  round(diff-_BrightIntensity+_DarkIntensity));
 			}
 
-			fixed3 getTexRamp(fixed3 albedo,fixed diff) {
+			fixed3 getTexRamp(fixed3 albedo,fixed diff) 
+			{
 				return (_LightColor0.rgb * albedo * tex2D(_Ramp, float2(clamp(diff*_RampIn,0.01,1), clamp(diff*_RampIn,0.01,1))).rgb).rgb;
 			}
 
@@ -337,7 +355,8 @@
 
             fixed4 MyFragmentProgram (Interpolators i) : SV_Target
             {
-				
+				//return fixed4(i.normal,1);
+				//return i.color;
 				//fixed4 albedo = tex2D(_MainTex, i.uv);
 				//InitializeFragmentNormal(i);
 				//fixed3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);

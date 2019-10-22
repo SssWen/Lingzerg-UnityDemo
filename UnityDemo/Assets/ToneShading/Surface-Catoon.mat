@@ -73,7 +73,7 @@ Material:
     - _ColorIntensity: 0.753
     - _ColorRampSwitch: 1
     - _Cutoff: 0.5
-    - _DarkIntensity: 0.602
+    - _DarkIntensity: 0.476
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _FresnelBase: 0.01
@@ -82,7 +82,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Metallic: 0.637
+    - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Outline: 0.01
@@ -91,7 +91,7 @@ Material:
     - _RampIn: 1
     - _RampSwitch: 1
     - _Scale: 1
-    - _Smoothness: 0.735
+    - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SpecularScale: 0.0647
@@ -99,6 +99,7 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
+    - _B: {r: 0, g: 0, b: 0, a: 1}
     - _Bright: {r: 1, g: 1, b: 1, a: 1}
     - _BrightColor: {r: 1, g: 0, b: 0, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
@@ -106,5 +107,7 @@ Material:
     - _DarkColor: {r: 0.032397628, g: 1, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FresnelCol: {r: 1, g: 1, b: 1, a: 1}
+    - _G: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _R: {r: 0, g: 0, b: 1.569, a: 1}
     - _Specular: {r: 1, g: 1, b: 1, a: 1}
