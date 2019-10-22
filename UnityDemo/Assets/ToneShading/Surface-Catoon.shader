@@ -2,20 +2,37 @@
 {
     Properties
     {
-	
+		//*** 完成 1 高光颜色 和 暗部颜色 固有色 + 滑块
+		//*** 完成 2 环境映射 支持反射球和天空盒反射
+		//3 顶点色做mask 控制法线映射球
 		[Header(Color)]
         _MainTex ("Texture", 2D) = "white" {}
-		_Color("Tint", Color) = (1, 1, 1, 1)
 
 		[Space(50)]
-		[Header(Ramp)]
+		[Header(RampSwitch)]
+		[Toggle]
+		_RampSwitch("Color Ramp Type",Float) = 1
+
+		[Space(50)]
+		[Header(ColorRamp)]
+		_Color("Base Color", Color) = (1, 1, 1, 1)
+		_ColorIntensity("Color Intensity", Range(0.01,1)) = 0.2
+		[Space(10)]
+		_BrightColor("Bright", Color) = (1, 1, 1, 1)
+		_BrightIntensity("Color Intensity", Range(0.01,1)) = 0.2
+		[Space(10)]
+		_DarkColor("Dark", Color) = (1, 1, 1, 1)
+		_DarkIntensity("Color Intensity", Range(0.01,1)) = 0.2
+		
+		[Space(50)]
+		[Header(TexRamp)]
 		_Ramp ("Ramp Texture", 2D) = "white" {}
 		_RampIn("Ramp In", Range(0.01,1)) = 0.2
 
 		[Space(50)]
 		[Header(Metallic)]
 		[Gamma] _Metallic("Metallic", Range(0, 1)) = 0 //金属度要经过伽马校正
-		//_Smoothness("Smoothness", Range(0, 1)) = 0.5
+		_Smoothness("Smoothness", Range(0, 1)) = 0.5
 
 		[Space(50)]
 		[Header(Specular)]
@@ -38,7 +55,8 @@
 
 		[Space(50)]
 		[Header(Mask)]
-		_Mask ("Mask R-金属通道 G-无 B-无", 2D) = "black" {}
+		_Mask ("Mask R-金属通道 G-菲涅尔 B-无 A-无", 2D) = "black" {}
+		_LUT("LUT", 2D) = "white" {}
     }
 
 	CGINCLUDE
@@ -253,10 +271,17 @@
 				float3 worldNormal : TEXCOORD5;
             };
 
+
+
             sampler2D _MainTex;
             float4 _MainTex_ST;
 			sampler2D _Mask;
-			fixed4 _Color;
+			sampler2D _LUT;
+
+			fixed _RampSwitch;
+
+			fixed4 _Color,_BrightColor,_DarkColor;
+			fixed _ColorIntensity,_BrightIntensity,_DarkIntensity;
 
 			sampler2D _Ramp;
 			fixed _RampIn;
@@ -281,7 +306,7 @@
                 i.pos = UnityObjectToClipPos(v.vertex);
 				i.worldPos.xyz = mul(unity_ObjectToWorld, v.vertex);
                 i.uv = TRANSFORM_TEX(v.uv, _MainTex);
-
+				i.color = v.color;
 				i.normal = UnityObjectToWorldNormal(v.normal);
 				i.worldNormal  = UnityObjectToWorldNormal(v.normal);
 			#if defined(BINORMAL_PER_FRAGMENT)
@@ -294,8 +319,25 @@
                 return i;
             }
 
+			//_BrightColor,_DarkColor;
+			//_ColorIntensity,_BrightIntensity,_DarkIntensity;
+			fixed3 getColorRamp(fixed3 albedo,fixed diff) {
+				//_ColorIntensity+_BrightIntensity+_DarkIntensity
+				return _LightColor0.rgb * albedo * lerp(_BrightColor.rgb, _DarkColor.rgb,  round(diff-_BrightIntensity+_DarkIntensity));
+			}
+
+			fixed3 getTexRamp(fixed3 albedo,fixed diff) {
+				return (_LightColor0.rgb * albedo * tex2D(_Ramp, float2(clamp(diff*_RampIn,0.01,1), clamp(diff*_RampIn,0.01,1))).rgb).rgb;
+			}
+
+			float3 fresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
+			{
+				return F0 + (max(float3(1.0 - roughness, 1.0 - roughness, 1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
+			}
+
             fixed4 MyFragmentProgram (Interpolators i) : SV_Target
             {
+				
 				//fixed4 albedo = tex2D(_MainTex, i.uv);
 				//InitializeFragmentNormal(i);
 				//fixed3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
@@ -333,7 +375,9 @@
 				fixed diff =  dot(worldNormal, worldLightDir);
 				diff = (diff * 0.5 + 0.5);
 				float4 mask = tex2D(_Mask, i.uv);
-				fixed3 diffuse = _LightColor0.rgb * albedo * tex2D(_Ramp, float2(clamp(diff*_RampIn,0.01,1), clamp(diff*_RampIn,0.01,1))).rgb;
+				
+				fixed3 diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
+
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic),mask.r);
 				
 				//高光
@@ -360,9 +404,53 @@
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
 
 				fixed3 finalColor = (ambient + diffuse + specular);
+
+
+				/*间接光计算*/
+
+				/*
+				***SH9部分***
+				* 球谐实际上代表了漫反射近似,在环境光照下的漫反射
+				*/
+				half3 ambient_contrib = ShadeSH9(float4(i.normal, 1));
+				/*
+				half3 ambient_contrib = 0.0;
+				ambient_contrib.r = dot(unity_SHAr, half4(i.normal, 1.0));
+				ambient_contrib.g = dot(unity_SHAg, half4(i.normal, 1.0));
+				ambient_contrib.b = dot(unity_SHAb, half4(i.normal, 1.0));
+				*/
+
+				float3 iblDiffuse = max(half3(0, 0, 0), ambient + ambient_contrib);
+
+				/*
+				***IBL部分***
+				* ibl本质就是为了镜面反射
+				*/
+				
+				float mip_roughness = perceptualRoughness * (1.7 - 0.7 * perceptualRoughness);
+				float3 reflectVec = reflect(-viewDir, i.normal);
+
+				half mip = mip_roughness * UNITY_SPECCUBE_LOD_STEPS;
+				half4 rgbm = UNITY_SAMPLE_TEXCUBE_LOD(unity_SpecCube0, reflectVec, mip); //根据粗糙度生成lod级别对贴图进行采样
+
+				float3 iblSpecular = DecodeHDR(rgbm, unity_SpecCube0_HDR);
+
+				//利用LUT 获取积分的预计算
+				//nv和 roughness 不能等于1 , 因为LUT在两者等于1的时候,会产生突变,导致物体出现亮斑
+				float2 envBDRF = tex2D(_LUT, float2(lerp(0, 0.99 ,nv), lerp(0, 0.99, roughness))).rg; // LUT采样
+				
+				//添加的部分从这里开始
+				float3 Flast = fresnelSchlickRoughness(max(nv, 0.0), F0, roughness);
+				float kdLast = (1 - Flast) * (1 - _Metallic);
+				//添加的部分到这里结束
+
+				float3 iblDiffuseResult = iblDiffuse * kdLast * albedo;
+				float3 iblSpecularResult = iblSpecular * (Flast * envBDRF.r + envBDRF.g);
+				float3 IndirectResult = iblDiffuseResult + iblSpecularResult;
+
 				fresnel = lerp(0,fresnel,mask.g);
 
-				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a, 1);
+				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a+IndirectResult, 1);
             }
             ENDCG
         }

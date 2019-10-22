@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Surface-Catoon
   m_Shader: {fileID: 4800000, guid: 932c8bd8f86e58b4da5899ec1aef997d, type: 3}
-  m_ShaderKeywords: 
+  m_ShaderKeywords: _COLORRAMPSWITCH_ON _RAMPSWITCH_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -39,12 +39,16 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _LUT:
+        m_Texture: {fileID: 2800000, guid: 01243aba349ba664c8a8ea64c648a829, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Mask:
-        m_Texture: {fileID: 2800000, guid: 3b6ea91c83a22d24c9451b4da8379bf2, type: 3}
+        m_Texture: {fileID: 2800000, guid: a834fa8c9692b6c409695d1dd073ec07, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -64,33 +68,42 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _BrightIntensity: 0.544
     - _BumpScale: 1
+    - _ColorIntensity: 0.753
+    - _ColorRampSwitch: 1
     - _Cutoff: 0.5
+    - _DarkIntensity: 0.602
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _FresnelBase: 0
-    - _FresnelPow: 0
-    - _FresnelScale: 0
+    - _FresnelBase: 0.01
+    - _FresnelPow: 5
+    - _FresnelScale: 0.044
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Metallic: 0
+    - _Metallic: 0.657
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Outline: 0.01
     - _OutlineWidth: 18.13
     - _Parallax: 0.02
     - _RampIn: 1
+    - _RampSwitch: 1
     - _Scale: 1
-    - _Smoothness: 0
+    - _Smoothness: 0.985
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
-    - _SpecularScale: 0.0429
+    - _SpecularScale: 0.0647
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 1, g: 0.7977248, b: 0.6179246, a: 1}
+    - _Bright: {r: 1, g: 1, b: 1, a: 1}
+    - _BrightColor: {r: 1, g: 0, b: 0, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Dark: {r: 1, g: 1, b: 1, a: 1}
+    - _DarkColor: {r: 0.032397628, g: 1, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FresnelCol: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
