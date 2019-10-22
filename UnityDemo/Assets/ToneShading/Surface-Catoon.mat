@@ -82,7 +82,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Metallic: 0.657
+    - _Metallic: 0.637
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Outline: 0.01
@@ -91,7 +91,7 @@ Material:
     - _RampIn: 1
     - _RampSwitch: 1
     - _Scale: 1
-    - _Smoothness: 0.985
+    - _Smoothness: 0.735
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SpecularScale: 0.0647

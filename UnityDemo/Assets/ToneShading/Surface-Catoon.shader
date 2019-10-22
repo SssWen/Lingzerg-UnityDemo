@@ -2,8 +2,8 @@
 {
     Properties
     {
-		//*** 完成 1 高光颜色 和 暗部颜色 固有色 + 滑块
-		//*** 完成 2 环境映射 支持反射球和天空盒反射
+		//*** 完成 *** 1 高光颜色 和 暗部颜色 固有色 + 滑块
+		//*** 完成 *** 2 环境映射 支持反射球和天空盒反射
 		//3 顶点色做mask 控制法线映射球
 		[Header(Color)]
         _MainTex ("Texture", 2D) = "white" {}
@@ -30,7 +30,7 @@
 		_RampIn("Ramp In", Range(0.01,1)) = 0.2
 
 		[Space(50)]
-		[Header(Metallic)]
+		[Header(Indirect Light)]
 		[Gamma] _Metallic("Metallic", Range(0, 1)) = 0 //金属度要经过伽马校正
 		_Smoothness("Smoothness", Range(0, 1)) = 0.5
 
@@ -407,7 +407,6 @@
 
 
 				/*间接光计算*/
-
 				/*
 				***SH9部分***
 				* 球谐实际上代表了漫反射近似,在环境光照下的漫反射
