@@ -31,6 +31,8 @@
 
 		[Space(50)]
 		[Header(Indirect Light)]
+		[Toggle]
+		_IndirectType("Indirect Type",Float) = 1
 		[Gamma] _Metallic("Metallic", Range(0, 1)) = 0 //金属度要经过伽马校正
 		_Smoothness("Smoothness", Range(0, 1)) = 0.5
 
@@ -275,7 +277,6 @@
 			//	fixed3 binormal : TEXCOORD3;
 			//#endif
 				fixed3 worldPos : TEXCOORD4;
-				float3 worldNormal : TEXCOORD5;
             };
 
 
@@ -296,7 +297,7 @@
 			fixed4 _Specular;
 			fixed _SpecularScale;
 
-			fixed _Metallic, _Smoothness;
+			fixed _Metallic, _Smoothness,_IndirectType;
 
 			
 			//菲涅尔表面相关逻辑
@@ -314,7 +315,7 @@
                 Interpolators i = (Interpolators)0;
                 i.pos = UnityObjectToClipPos(v.vertex);
 
-				i.worldPos.xyz = mul(unity_ObjectToWorld, v.vertex);
+				i.worldPos.xyz = normalize(mul(unity_ObjectToWorld, v.vertex));
                 i.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				i.color = v.color;
 				
@@ -324,8 +325,6 @@
 				i.normal = normalize(lerp(i.normal,v.vertex.xyz-_G.rgb, v.color.g));
 				i.normal = normalize(lerp(i.normal,v.vertex.xyz-_B.rgb, v.color.b));
 
-				i.worldNormal = i.normal;
-				
 			//#if defined(BINORMAL_PER_FRAGMENT)
 			//	i.tangent = fixed4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
 			//#else
@@ -343,7 +342,7 @@
 				return _LightColor0.rgb * albedo * lerp(_BrightColor.rgb, _DarkColor.rgb,  round(diff-_BrightIntensity+_DarkIntensity));
 			}
 
-			fixed3 getTexRamp(fixed3 albedo,fixed diff) 
+			fixed3 getTexRamp(fixed3 albedo,fixed diff)
 			{
 				return (_LightColor0.rgb * albedo * tex2D(_Ramp, float2(clamp(diff*_RampIn,0.01,1), clamp(diff*_RampIn,0.01,1))).rgb).rgb;
 			}
@@ -352,6 +351,50 @@
 			{
 				return F0 + (max(float3(1.0 - roughness, 1.0 - roughness, 1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 			}
+			
+
+			fixed3 getIndirectLight(Interpolators i, float3 albedo,float3 ambient,float perceptualRoughness,float roughness,float nv,float3 F0 ) {
+				/*间接光计算*/
+				/*
+				***SH9部分***
+				* 球谐实际上代表了漫反射近似,在环境光照下的漫反射
+				*/
+				half3 ambient_contrib = ShadeSH9(float4(i.normal, 1));
+				/*
+				half3 ambient_contrib = 0.0;
+				ambient_contrib.r = dot(unity_SHAr, half4(i.normal, 1.0));
+				ambient_contrib.g = dot(unity_SHAg, half4(i.normal, 1.0));
+				ambient_contrib.b = dot(unity_SHAb, half4(i.normal, 1.0));
+				*/
+				float3 iblDiffuse = max(half3(0, 0, 0), ambient + ambient_contrib);
+
+				/*
+				***IBL部分***
+				* ibl本质就是为了镜面反射
+				*/
+				float mip_roughness = perceptualRoughness * (1.7 - 0.7 * perceptualRoughness);
+				float3 reflectVec = reflect(-normalize(_WorldSpaceCameraPos.xyz - i.worldPos.xyz), i.normal);
+
+				half mip = mip_roughness * UNITY_SPECCUBE_LOD_STEPS;
+				half4 rgbm = UNITY_SAMPLE_TEXCUBE_LOD(unity_SpecCube0, reflectVec, mip); //根据粗糙度生成lod级别对贴图进行采样
+
+				float3 iblSpecular = DecodeHDR(rgbm, unity_SpecCube0_HDR);
+
+				//利用LUT 获取积分的预计算
+				//nv和 roughness 不能等于1 , 因为LUT在两者等于1的时候,会产生突变,导致物体出现亮斑
+				float2 envBDRF = tex2D(_LUT, float2(lerp(0, 0.99 ,nv), lerp(0, 0.99, roughness))).rg; // LUT采样
+				
+				//添加的部分从这里开始
+				float3 Flast = fresnelSchlickRoughness(max(nv, 0.0), F0, roughness);
+				float kdLast = (1 - Flast) * (1 - _Metallic);
+				//添加的部分到这里结束
+
+				float3 iblDiffuseResult = iblDiffuse * kdLast * albedo;
+				float3 iblSpecularResult = iblSpecular * (Flast * envBDRF.r + envBDRF.g);
+				return iblDiffuseResult + iblSpecularResult;
+				
+			}
+			//_IndirectType
 
             fixed4 MyFragmentProgram (Interpolators i) : SV_Target
             {
@@ -371,27 +414,21 @@
 				float nv = max(saturate(dot(i.normal, viewDir)), 0.000001);    //法线点乘视线方向,拿到实现与平面的倾斜关系
 				float vh = max(saturate(dot(viewDir, halfVector)), 0.000001);  //视角点乘 - 半角向量,这个点乘值的结果越接近0,视角和光线的夹角越大(最大为0,180度)
 				float lh = max(saturate(dot(lightDir, halfVector)), 0.000001); //同上,只不过是从光照方向来求
-				float nh = max(saturate(dot(i.normal, halfVector)), 0.000001); 
-				//法线和半角向量的关系,如果结果=0,则法线垂直于半角向量,什么鬼的几何意义
+				float nh = max(saturate(dot(i.normal, halfVector)), 0.000001);
+				//法线和半角向量的关系,如果结果=0, 则法线垂直于半角向量,什么鬼的几何意义
 				//假如半角向量和法线点乘等于1 则代表半角向量等于法向量
 
-				fixed3 worldNormal = normalize(i.worldNormal);
-				fixed3 worldLightDir = normalize(UnityWorldSpaceLightDir(i.worldPos));
-				fixed3 worldViewDir = normalize(UnityWorldSpaceViewDir(i.worldPos));
-				fixed3 worldHalfDir = normalize(worldLightDir + worldViewDir);
-				
 				fixed4 c = tex2D (_MainTex, i.uv);
 				fixed3 albedo = c.rgb * _Color.rgb;
-				
-				fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz * albedo;
-				
+				fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz  * albedo;
+
 				//菲涅尔F
 				//unity_ColorSpaceDielectricSpec.rgb这玩意大概是float3(0.04, 0.04, 0.04)，就是个经验值
 				float3 F0 = lerp(unity_ColorSpaceDielectricSpec.rgb, albedo, _Metallic);
 				//float3 F = lerp(pow((1 - max(vh, 0)),5), 1, F0);//是hv不是nv
 				float3 F = F0 + (1 - F0) * exp2((-5.55473 * vh - 6.98316) * vh);
 
-				fixed diff =  dot(worldNormal, worldLightDir);
+				fixed diff =  dot(i.normal, lightDir);
 				diff = (diff * 0.5 + 0.5);
 				float4 mask = tex2D(_Mask, i.uv);
 				
@@ -399,75 +436,34 @@
 
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic),mask.r);
 				
-				//高光
+				////高光
 				float perceptualRoughness = 1 - _Smoothness;
 				float roughness = perceptualRoughness * perceptualRoughness;
-				float squareRoughness = roughness * roughness;
+				//float squareRoughness = roughness * roughness;
 
 				//镜面反射部分
 				//D是法线分布函数或者叫正态分部函数，从统计学上估算微平面的取向 - 这里才是高光
-				float lerpSquareRoughness = pow(lerp(0.002, 1, roughness), 2);//Unity把roughness lerp到了0.002
-				float D = lerpSquareRoughness / (pow((pow(nh, 2) * (lerpSquareRoughness - 1) + 1), 2) * UNITY_PI);
+				//float lerpSquareRoughness = pow(lerp(0.002, 1, roughness), 2);//Unity把roughness lerp到了0.002
+				//float D = lerpSquareRoughness / (pow((pow(nh, 2) * (lerpSquareRoughness - 1) + 1), 2) * UNITY_PI);
 
-				//几何遮蔽G 说白了就是高光 - PS 作者写错了, 这里实际上有点像粗糙度,估计就是粗糙度
-				float kInDirectLight = pow(squareRoughness + 1, 2) / 8;
-				float kInIBL = pow(squareRoughness, 2) / 8;
-				float GLeft = nl / lerp(nl, 1, kInDirectLight);
-				float GRight = nv / lerp(nv, 1, kInDirectLight);
-				float G = GLeft * GRight;
+				////几何遮蔽G 说白了就是粗糙度
+				//float kInDirectLight = pow(squareRoughness + 1, 2) / 8;
+				//float kInIBL = pow(squareRoughness, 2) / 8;
+				//float GLeft = nl / lerp(nl, 1, kInDirectLight);
+				//float GRight = nv / lerp(nv, 1, kInDirectLight);
+				//float G = GLeft * GRight;
 
-				fixed spec = dot(worldNormal, worldHalfDir);
+				fixed spec = dot(i.normal, halfVector);
 				fixed w = fwidth(spec) * 2.0;// (D * G * F * 0.25) / (nv * nl);//
 				float3 specular =_Specular.rgb * lerp(0, 1, smoothstep(-w, w, spec + _SpecularScale - 1)) * step(0.0001, _SpecularScale);
 				
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
-
+				
 				fixed3 finalColor = (ambient + diffuse + specular);
-
-
-				/*间接光计算*/
-				/*
-				***SH9部分***
-				* 球谐实际上代表了漫反射近似,在环境光照下的漫反射
-				*/
-				half3 ambient_contrib = ShadeSH9(float4(i.normal, 1));
-				/*
-				half3 ambient_contrib = 0.0;
-				ambient_contrib.r = dot(unity_SHAr, half4(i.normal, 1.0));
-				ambient_contrib.g = dot(unity_SHAg, half4(i.normal, 1.0));
-				ambient_contrib.b = dot(unity_SHAb, half4(i.normal, 1.0));
-				*/
-
-				float3 iblDiffuse = max(half3(0, 0, 0), ambient + ambient_contrib);
-
-				/*
-				***IBL部分***
-				* ibl本质就是为了镜面反射
-				*/
 				
-				float mip_roughness = perceptualRoughness * (1.7 - 0.7 * perceptualRoughness);
-				float3 reflectVec = reflect(-viewDir, i.normal);
-
-				half mip = mip_roughness * UNITY_SPECCUBE_LOD_STEPS;
-				half4 rgbm = UNITY_SAMPLE_TEXCUBE_LOD(unity_SpecCube0, reflectVec, mip); //根据粗糙度生成lod级别对贴图进行采样
-
-				float3 iblSpecular = DecodeHDR(rgbm, unity_SpecCube0_HDR);
-
-				//利用LUT 获取积分的预计算
-				//nv和 roughness 不能等于1 , 因为LUT在两者等于1的时候,会产生突变,导致物体出现亮斑
-				float2 envBDRF = tex2D(_LUT, float2(lerp(0, 0.99 ,nv), lerp(0, 0.99, roughness))).rg; // LUT采样
-				
-				//添加的部分从这里开始
-				float3 Flast = fresnelSchlickRoughness(max(nv, 0.0), F0, roughness);
-				float kdLast = (1 - Flast) * (1 - _Metallic);
-				//添加的部分到这里结束
-
-				float3 iblDiffuseResult = iblDiffuse * kdLast * albedo;
-				float3 iblSpecularResult = iblSpecular * (Flast * envBDRF.r + envBDRF.g);
-				float3 IndirectResult = iblDiffuseResult + iblSpecularResult;
-
+				float3 IndirectResult = lerp(float3(0,0,0), getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0), _IndirectType);
 				fresnel = lerp(0,fresnel,mask.g);
-
+				
 				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a+IndirectResult, 1);
             }
             ENDCG
