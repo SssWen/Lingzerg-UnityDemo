@@ -6,8 +6,12 @@
 		//*** 完成 *** 2 环境映射 支持反射球和天空盒反射
 		//*** 完成 *** 3 顶点色做mask 控制法线映射球
 		[Header(Color)]
-        _MainTex ("Texture", 2D) = "white" {}
-
+        _MainTex ("Texture", 2D) = "while" {}
+		_ShadowTex("Texture", 2D) = "black" {}
+		_SpecularTex("Texture", 2D) = "black" {}
+		
+		//highlight
+		//shadow
 		[Space(50)]
 		[Header(RampSwitch)]
 		[Toggle]
@@ -19,10 +23,13 @@
 		_ColorIntensity("Color Intensity", Range(0.01,1)) = 0.2
 		[Space(10)]
 		_BrightColor("Bright", Color) = (1, 1, 1, 1)
-		_BrightIntensity("Color Intensity", Range(0.01,1)) = 0.2
+		_BrightIntensity("Bright Intensity", Range(0.01,1)) = 0.2
+		[Space(10)]
+		_GrayColor("Gray", Color) = (1, 1, 1, 1)
+		_GrayIntensity("Gray Intensity", Range(0.01,1)) = 0.2
 		[Space(10)]
 		_DarkColor("Dark", Color) = (1, 1, 1, 1)
-		_DarkIntensity("Color Intensity", Range(0.01,1)) = 0.2
+		_DarkIntensity("Dark Intensity", Range(0.01,1)) = 0.2
 		
 		[Space(50)]
 		[Header(TexRamp)]
@@ -77,6 +84,7 @@
     SubShader
     {
         Tags { "RenderType"="Opaque" }
+
         LOD 100
 
 		Pass
@@ -283,13 +291,17 @@
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
+
+			sampler2D _ShadowTex,_SpecularTex;
+			float4 _ShadowTex_ST,_SpecularTex_ST;
+
 			sampler2D _Mask;
 			sampler2D _LUT;
 
 			fixed _RampSwitch;
 
-			fixed4 _Color,_BrightColor,_DarkColor;
-			fixed _ColorIntensity,_BrightIntensity,_DarkIntensity;
+			fixed4 _Color,_BrightColor,_GrayColor,_DarkColor;
+			fixed _ColorIntensity,_BrightIntensity,_GrayIntensity,_DarkIntensity;
 
 			sampler2D _Ramp;
 			fixed _RampIn;
@@ -321,9 +333,10 @@
 				
 				//i.normal = UnityObjectToWorldNormal(v.normal);
 				//i.worldNormal  = UnityObjectToWorldNormal(v.normal);
-				i.normal = normalize(lerp(UnityObjectToWorldNormal(v.normal),v.vertex.xyz-_R.rgb, v.color.r));
-				i.normal = normalize(lerp(i.normal,v.vertex.xyz-_G.rgb, v.color.g));
-				i.normal = normalize(lerp(i.normal,v.vertex.xyz-_B.rgb, v.color.b));
+				i.normal = normalize(UnityObjectToWorldNormal(v.normal));
+				//i.normal = normalize(lerp(UnityObjectToWorldNormal(v.normal),v.vertex.xyz-_R.rgb, v.color.r));
+				//i.normal = normalize(lerp(i.normal,v.vertex.xyz-_G.rgb, v.color.g));
+				//i.normal = normalize(lerp(i.normal,v.vertex.xyz-_B.rgb, v.color.b));
 
 			//#if defined(BINORMAL_PER_FRAGMENT)
 			//	i.tangent = fixed4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
@@ -331,7 +344,6 @@
 			//	i.tangent = UnityObjectToWorldDir(v.tangent.xyz);
 			//	i.binormal = CreateBinormal(i.normal, i.tangent, v.tangent.w);
 			//#endif
-				
                 return i;
             }
 
@@ -339,9 +351,11 @@
 			//_ColorIntensity,_BrightIntensity,_DarkIntensity;
 			fixed3 getColorRamp(fixed3 albedo,fixed diff) {
 				//_ColorIntensity+_BrightIntensity+_DarkIntensity
-				return _LightColor0.rgb * albedo * lerp(_BrightColor.rgb, _DarkColor.rgb,  round(diff-_BrightIntensity+_DarkIntensity));
+				fixed Intensity = (_DarkIntensity+_GrayIntensity+_BrightIntensity)/3;
+				fixed3 dark = lerp(_DarkColor.rgb,_GrayColor,round(diff-Intensity-_GrayIntensity/3));
+				return _LightColor0.rgb * albedo * lerp(dark.rgb, _BrightColor.rgb,  round(diff));
 			}
-
+			
 			fixed3 getTexRamp(fixed3 albedo,fixed diff)
 			{
 				return (_LightColor0.rgb * albedo * tex2D(_Ramp, float2(clamp(diff*_RampIn,0.01,1), clamp(diff*_RampIn,0.01,1))).rgb).rgb;
@@ -352,7 +366,6 @@
 				return F0 + (max(float3(1.0 - roughness, 1.0 - roughness, 1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 			}
 			
-
 			fixed3 getIndirectLight(Interpolators i, float3 albedo,float3 ambient,float perceptualRoughness,float roughness,float nv,float3 F0 ) {
 				/*间接光计算*/
 				/*
@@ -418,10 +431,10 @@
 				//法线和半角向量的关系,如果结果=0, 则法线垂直于半角向量,什么鬼的几何意义
 				//假如半角向量和法线点乘等于1 则代表半角向量等于法向量
 
-				fixed4 c = tex2D (_MainTex, i.uv);
+				fixed4 c = tex2D(_MainTex, i.uv);
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz  * albedo;
-
+				
 				//菲涅尔F
 				//unity_ColorSpaceDielectricSpec.rgb这玩意大概是float3(0.04, 0.04, 0.04)，就是个经验值
 				float3 F0 = lerp(unity_ColorSpaceDielectricSpec.rgb, albedo, _Metallic);
@@ -433,6 +446,8 @@
 				float4 mask = tex2D(_Mask, i.uv);
 				
 				fixed3 diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
+
+				//return float4(diffuse,1);
 
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic),mask.r);
 				
