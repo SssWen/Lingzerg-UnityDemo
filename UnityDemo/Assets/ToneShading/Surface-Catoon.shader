@@ -7,9 +7,15 @@
 		//*** 完成 *** 3 顶点色做mask 控制法线映射球
 		[Header(Color)]
         _MainTex ("Texture", 2D) = "while" {}
-		_ShadowTex("Texture", 2D) = "black" {}
-		_SpecularTex("Texture", 2D) = "black" {}
+		_ShadowTex("Shadow Texture", 2D) = "black" {}
+		_SpecularTex("Specular Texture", 2D) = "black" {}
 		
+		[Header(ColorParameter)]
+		_ShadowContrast("Shadow Contrast", Range(-2,1)) = 1
+		_DarkenInnerLine("Darken Inner Line", Range(0, 1)) = 0.2
+		_SpecStep ("_SpecStep",Range(0.1,0.3)) = 0.5
+		_Shininess ("Shininess", Range (0.001, 2)) = 0.078125
+
 		//highlight
 		//shadow
 		[Space(50)]
@@ -97,13 +103,11 @@
 			#pragma vertex vert
 			#pragma fragment frag
 			#include "UnityCG.cginc"
-			#pragma only_renderers d3d9 d3d11 glcore gles gles3 metal xboxone ps4 switch
 			#pragma target 3.0
 			#pragma shader_feature _ITS_CLIPPING_NONE _ITS_CLIPPING_ALPHA _ITS_CLIPPING_MASK
 			#pragma shader_feature _ITS_OUTLINE_BLEND_MAIN_NONE _ITS_OUTLINE_BLEND_MAIN_NOLIGHT _ITS_OUTLINE_BLEND_MAIN_LIGHT 
 			#pragma shader_feature _ITS_OUTLINE_MASK_TEX
 			#pragma shader_feature _ITS_OUTLINE_COLOR_TEX
-			#pragma shader_feature _ITS_OUTLINE_NORMAL _ITS_OUTLINE_POSITION
 			
 			#if defined(_ITS_OUTLINE_BLEND_MAIN_NOLIGHT) || defined(_ITS_OUTLINE_BLEND_MAIN_LIGHT) || defined(_ITS_CLIPPING_ALPHA)
 			uniform sampler2D _MainTex; uniform float4 _MainTex_ST;
@@ -172,7 +176,7 @@
 				o.pos = UnityObjectToClipPos(v.vertex);
 				return o;
 			#endif
-
+				
 				float4 objPos = mul(unity_ObjectToWorld, float4(0, 0, 0, 1));
 			#ifdef _ITS_OUTLINE_MASK_TEX
 				float outlineMask = tex2Dlod(_OutlineMaskTex, float4(TRANSFORM_TEX(o.uv0, _OutlineMaskTex), 0.0, 0)).r;
@@ -189,12 +193,7 @@
 				_OffsetZ = _OffsetZ * 0.01;
 			#endif
 
-			#ifdef _ITS_OUTLINE_NORMAL
 				o.pos = UnityObjectToClipPos(float4(v.vertex.xyz + v.normal*outlineWidth, 1));
-			#elif _ITS_OUTLINE_POSITION
-				outlineWidth = outlineWidth * 2;
-				o.pos = UnityObjectToClipPos(float4(v.vertex.xyz + normalize(v.vertex)*outlineWidth, 1));
-			#endif
 				o.pos.z = o.pos.z + _OffsetZ * viewDirectionVP.z;
 				return o;
 			}
@@ -287,13 +286,11 @@
 				fixed3 worldPos : TEXCOORD4;
             };
 
-
-
             sampler2D _MainTex;
             float4 _MainTex_ST;
 
 			sampler2D _ShadowTex,_SpecularTex;
-			float4 _ShadowTex_ST,_SpecularTex_ST;
+			fixed _ShadowContrast,_DarkenInnerLine,_SpecStep,_Shininess;
 
 			sampler2D _Mask;
 			sampler2D _LUT;
@@ -409,6 +406,8 @@
 			}
 			//_IndirectType
 
+
+
             fixed4 MyFragmentProgram (Interpolators i) : SV_Target
             {
 				//return fixed4(i.normal,1);
@@ -427,36 +426,50 @@
 				float nv = max(saturate(dot(i.normal, viewDir)), 0.000001);    //法线点乘视线方向,拿到实现与平面的倾斜关系
 				float vh = max(saturate(dot(viewDir, halfVector)), 0.000001);  //视角点乘 - 半角向量,这个点乘值的结果越接近0,视角和光线的夹角越大(最大为0,180度)
 				float lh = max(saturate(dot(lightDir, halfVector)), 0.000001); //同上,只不过是从光照方向来求
-				float nh = max(saturate(dot(i.normal, halfVector)), 0.000001);
+				float nh = max(saturate(dot(i.normal, halfVector)), 0.000001); 
 				//法线和半角向量的关系,如果结果=0, 则法线垂直于半角向量,什么鬼的几何意义
 				//假如半角向量和法线点乘等于1 则代表半角向量等于法向量
 
 				fixed4 c = tex2D(_MainTex, i.uv);
 				fixed3 albedo = c.rgb * _Color.rgb;
-				fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz  * albedo;
+				fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz * albedo;
+
+				//阴影贴图和高光贴图
+				fixed3 shadowCol = c.rgb *tex2D(_ShadowTex, i.uv).rgb;
+				fixed4 _SpecularCol = tex2D(_SpecularTex,i.uv);
+
+				fixed shadowThreshold = _SpecularCol.g;
+				shadowThreshold *= i.color.r;
+				shadowThreshold = 1- shadowThreshold + _ShadowContrast;
 				
+				float shadowContrast = step(shadowThreshold,nl);
+
 				//菲涅尔F
 				//unity_ColorSpaceDielectricSpec.rgb这玩意大概是float3(0.04, 0.04, 0.04)，就是个经验值
 				float3 F0 = lerp(unity_ColorSpaceDielectricSpec.rgb, albedo, _Metallic);
 				//float3 F = lerp(pow((1 - max(vh, 0)),5), 1, F0);//是hv不是nv
 				float3 F = F0 + (1 - F0) * exp2((-5.55473 * vh - 6.98316) * vh);
 
+				//漫反射
 				fixed diff =  dot(i.normal, lightDir);
 				diff = (diff * 0.5 + 0.5);
 				float4 mask = tex2D(_Mask, i.uv);
 				
 				fixed3 diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
+				diffuse *= lerp(1,(1 - F)*(1-_Metallic),mask.r);
+				
+				diffuse = lerp(shadowCol,diffuse, shadowContrast);
+
+				//计算阴影叠加
 
 				//return float4(diffuse,1);
 
-				diffuse *= lerp(1,(1 - F)*(1-_Metallic),mask.r);
-				
-				////高光
+				//粗糙度
 				float perceptualRoughness = 1 - _Smoothness;
 				float roughness = perceptualRoughness * perceptualRoughness;
 				//float squareRoughness = roughness * roughness;
 
-				//镜面反射部分
+				////镜面反射部分
 				//D是法线分布函数或者叫正态分部函数，从统计学上估算微平面的取向 - 这里才是高光
 				//float lerpSquareRoughness = pow(lerp(0.002, 1, roughness), 2);//Unity把roughness lerp到了0.002
 				//float D = lerpSquareRoughness / (pow((pow(nh, 2) * (lerpSquareRoughness - 1) + 1), 2) * UNITY_PI);
@@ -468,16 +481,33 @@
 				//float GRight = nv / lerp(nv, 1, kInDirectLight);
 				//float G = GLeft * GRight;
 
+				
+				fixed lineCol = _SpecularCol.a;
+				lineCol = lerp(lineCol,_DarkenInnerLine,step(lineCol,_DarkenInnerLine));
+
+				//高光部分
 				fixed spec = dot(i.normal, halfVector);
 				fixed w = fwidth(spec) * 2.0;// (D * G * F * 0.25) / (nv * nl);//
 				float3 specular =_Specular.rgb * lerp(0, 1, smoothstep(-w, w, spec + _SpecularScale - 1)) * step(0.0001, _SpecularScale);
 				
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
 				
-				fixed3 finalColor = (ambient + diffuse + specular);
-				
+				fixed4 finalColor = fixed4(ambient + diffuse + specular,1);
+
+				//高光信息
+				fixed ilmTexR = _SpecularCol.r;
+				fixed ilmTexB = _SpecularCol.b;
+				//叠加阴影贴图和高光贴图
+				finalColor.rgb += shadowCol*0.5f*step(_SpecStep,ilmTexB*pow(nh,_Shininess*ilmTexR*128)) *shadowContrast ;
+				finalColor.rgb *= lineCol;
+
 				float3 IndirectResult = lerp(float3(0,0,0), getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0), _IndirectType);
 				fresnel = lerp(0,fresnel,mask.g);
+
+				finalColor *= _LightColor0;
+			 	finalColor *= 1 + UNITY_LIGHTMODEL_AMBIENT;
+				
+				finalColor.a = c.a;
 				
 				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a+IndirectResult, 1);
             }
