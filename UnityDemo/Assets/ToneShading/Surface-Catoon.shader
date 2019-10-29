@@ -29,7 +29,7 @@
 		_ColorIntensity("Color Intensity", Range(0.01,1)) = 0.2
 		[Space(10)]
 		_BrightColor("Bright", Color) = (1, 1, 1, 1)
-		_BrightIntensity("Bright Intensity", Range(0.01,1)) = 0.2
+		_BrightIntensity("Bright Intensity", Range(0.01,2)) = 0.2
 		[Space(10)]
 		_GrayColor("Gray", Color) = (1, 1, 1, 1)
 		_GrayIntensity("Gray Intensity", Range(0.01,1)) = 0.2
@@ -348,9 +348,18 @@
 			//_ColorIntensity,_BrightIntensity,_DarkIntensity;
 			fixed3 getColorRamp(fixed3 albedo,fixed diff) {
 				//_ColorIntensity+_BrightIntensity+_DarkIntensity
-				fixed Intensity = (_DarkIntensity+_GrayIntensity+_BrightIntensity)/3;
-				fixed3 dark = lerp(_DarkColor.rgb,_GrayColor,round(diff-Intensity-_GrayIntensity/3));
-				return _LightColor0.rgb * albedo * lerp(dark.rgb, _BrightColor.rgb,  round(diff));
+				
+				fixed Intensity = _DarkIntensity+_GrayIntensity+_BrightIntensity;
+				fixed darkIntensity = _DarkIntensity/Intensity;
+				fixed grayIntensity = _GrayIntensity/Intensity;
+				fixed brightIntensity = _BrightIntensity/Intensity;
+
+				fixed gbIntensity = _GrayIntensity+_DarkIntensity;
+				fixed gbDarkIntensity = _DarkIntensity/gbIntensity;
+				fixed gbGrayIntensity = _GrayIntensity/gbIntensity;
+				
+				fixed3 dark = lerp(_DarkColor.rgb,_GrayColor,saturate(round(diff-brightIntensity-darkIntensity)+1));
+				return _LightColor0.rgb * albedo * lerp(dark.rgb, _BrightColor.rgb,  saturate(round(diff-darkIntensity)));
 			}
 			
 			fixed3 getTexRamp(fixed3 albedo,fixed diff)
@@ -455,10 +464,12 @@
 				diff = (diff * 0.5 + 0.5);
 				float4 mask = tex2D(_Mask, i.uv);
 				
-				fixed3 diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
+				
+				fixed3 diffuse = lerp(shadowCol,diffuse, shadowContrast);
+				diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
+				
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic),mask.r);
 				
-				diffuse = lerp(shadowCol,diffuse, shadowContrast);
 
 				//计算阴影叠加
 
@@ -481,7 +492,6 @@
 				//float GRight = nv / lerp(nv, 1, kInDirectLight);
 				//float G = GLeft * GRight;
 
-				
 				fixed lineCol = _SpecularCol.a;
 				lineCol = lerp(lineCol,_DarkenInnerLine,step(lineCol,_DarkenInnerLine));
 
@@ -498,7 +508,7 @@
 				fixed ilmTexR = _SpecularCol.r;
 				fixed ilmTexB = _SpecularCol.b;
 				//叠加阴影贴图和高光贴图
-				finalColor.rgb += shadowCol*0.5f*step(_SpecStep,ilmTexB*pow(nh,_Shininess*ilmTexR*128)) *shadowContrast ;
+				//finalColor.rgb += shadowCol*0.5f*step(_SpecStep,ilmTexB*pow(nh,_Shininess*ilmTexR*128)) *shadowContrast ;
 				finalColor.rgb *= lineCol;
 
 				float3 IndirectResult = lerp(float3(0,0,0), getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0), _IndirectType);
