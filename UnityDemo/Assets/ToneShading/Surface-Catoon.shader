@@ -58,7 +58,6 @@
 		[Header(Outline)]
 		_OutlineColor("Outline Color", Color) = (0,0,0,1)
 		_OutlineWidth("Outline Width", Float) = 0.01
-		_Scale("_Scale", Float) = 1
 
 		/** Special - 特殊功能 - 顶点色控制顶点法线朝向质心 **/
 		[Space(50)]
