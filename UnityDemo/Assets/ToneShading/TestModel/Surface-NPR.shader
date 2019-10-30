@@ -48,9 +48,12 @@
 		_Smoothness("Smoothness", Range(0, 1)) = 0.5
 
 		[Space(50)]
-		[Header(Specular)]
+		[Header(SpecularAndShadow)]
 		_SpecularColor ("Specular Color", Color) = (1, 1, 1, 1)
-		_SpecularScale ("Specular Scale", Range(0, 0.1)) = 0.01
+		_SpecularScale ("Specular Scale", Range(0, 1)) = 1
+		[Space]
+		_ShadowColor ("Shadow Color", Color) = (0, 0, 0, 1)
+		_ShadowScale ("Shadow Scale", Range(0, 1)) = 1
 
 		[Space(50)]
 		[Header(Outline)]
@@ -297,8 +300,8 @@
 			sampler2D _Ramp;
 			fixed _RampIn;
 
-			fixed4 _SpecularColor;
-			fixed _SpecularScale;
+			fixed4 _SpecularColor,_ShadowColor;
+			fixed _SpecularScale,_ShadowScale;
 
 			fixed _Metallic, _Smoothness,_IndirectType;
 
@@ -447,15 +450,10 @@
 				diff = (diff * 0.5 + 0.5);
 				float4 mask = tex2D(_Mask, i.uv);
 
-				//阴影贴图和高光贴图
-				fixed3 shadowCol = c.rgb *mask.b;
-				fixed4 _SpecularCol = _SpecularColor;
-				
-
-				fixed3 diffuse = lerp(shadowCol, diffuse, mask.b);
-				diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
-				
-				diffuse *= lerp(1,(1 - F)*(1-_Metallic),mask.r);
+				//fixed3 diffuse = lerp(diffuse,_ShadowColor, mask.b);
+				fixed3 diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
+				diffuse += lerp(_ShadowColor,0, mask.b)*_ShadowScale;
+				diffuse *= lerp(1,(1 - F)*(1-_Metallic), mask.r);
 				
 				//计算阴影叠加
 
@@ -482,7 +480,7 @@
 				//高光部分
 				fixed spec = dot(i.normal, halfVector);
 				fixed w = fwidth(spec) * 2.0;// (D * G * F * 0.25) / (nv * nl);//
-				float3 specular =_SpecularColor.rgb * lerp(0, 1, mask.g) * step(0.0001, _SpecularScale);
+				float3 specular =_SpecularColor.rgb * lerp(0, 1, mask.g) * _SpecularScale;
 				
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
 				
