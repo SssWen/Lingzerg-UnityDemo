@@ -13,19 +13,13 @@
 		[Header(Color)]
         _MainTex ("Main Texture", 2D) = "while" {}
 		_Mask("Mask Texture", 2D) = "while" {}
-		
-		[Header(ColorParameter)]
-		_ShadowContrast("Shadow Contrast", Range(-2,1)) = 1
-		_DarkenInnerLine("Darken Inner Line", Range(0, 1)) = 0.2
-		_SpecStep ("_SpecStep",Range(0.1,0.3)) = 0.5
-		_Shininess ("Shininess", Range (0.001, 2)) = 0.078125
 
 		//highlight
 		//shadow
 		[Space(50)]
 		[Header(RampSwitch)]
 		[Toggle]
-		_RampSwitch("Color Ramp Type",Float) = 1
+		_RampSwitch("Color Ramp Type",Float) = 0
 
 		[Space(50)]
 		[Header(ColorRamp)]
@@ -49,7 +43,7 @@
 		[Space(50)]
 		[Header(Indirect Light)]
 		[Toggle]
-		_IndirectType("Indirect Type",Float) = 1
+		_IndirectType("Indirect Type",Float) = 0
 		[Gamma] _Metallic("Metallic", Range(0, 1)) = 0 //金属度要经过伽马校正
 		_Smoothness("Smoothness", Range(0, 1)) = 0.5
 
@@ -291,7 +285,6 @@
             sampler2D _MainTex;
             float4 _MainTex_ST;
 
-			fixed _ShadowContrast,_DarkenInnerLine,_SpecStep,_Shininess;
 
 			sampler2D _Mask;
 			sampler2D _LUT;
@@ -457,12 +450,7 @@
 				//阴影贴图和高光贴图
 				fixed3 shadowCol = c.rgb *mask.b;
 				fixed4 _SpecularCol = _SpecularColor;
-
-				fixed shadowThreshold = _SpecularCol.g;
-				shadowThreshold *= i.color.r;
-				shadowThreshold = 1- shadowThreshold + _ShadowContrast;
 				
-				float shadowContrast = step(shadowThreshold,nl);
 
 				fixed3 diffuse = lerp(shadowCol, diffuse, mask.b);
 				diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
@@ -490,12 +478,6 @@
 				//float GRight = nv / lerp(nv, 1, kInDirectLight);
 				//float G = GLeft * GRight;
 
-				fixed lineCol = _SpecularCol.a;
-				lineCol = lerp(lineCol,_DarkenInnerLine,step(lineCol,_DarkenInnerLine));
-				
-				//高光信息
-				fixed ilmTexR = _SpecularCol.r;
-				fixed ilmTexB = _SpecularCol.b;
 
 				//高光部分
 				fixed spec = dot(i.normal, halfVector);
