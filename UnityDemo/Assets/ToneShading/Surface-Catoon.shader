@@ -330,9 +330,9 @@
 				//i.normal = UnityObjectToWorldNormal(v.normal);
 				//i.worldNormal  = UnityObjectToWorldNormal(v.normal);
 				i.normal = normalize(UnityObjectToWorldNormal(v.normal));
-				//i.normal = normalize(lerp(UnityObjectToWorldNormal(v.normal),v.vertex.xyz-_R.rgb, v.color.r));
-				//i.normal = normalize(lerp(i.normal,v.vertex.xyz-_G.rgb, v.color.g));
-				//i.normal = normalize(lerp(i.normal,v.vertex.xyz-_B.rgb, v.color.b));
+				i.normal = normalize(lerp(UnityObjectToWorldNormal(v.normal),v.vertex.xyz-_R.rgb, v.color.r));
+				i.normal = normalize(lerp(i.normal,v.vertex.xyz-_G.rgb, v.color.g));
+				i.normal = normalize(lerp(i.normal,v.vertex.xyz-_B.rgb, v.color.b));
 
 			//#if defined(BINORMAL_PER_FRAGMENT)
 			//	i.tangent = fixed4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
@@ -414,8 +414,6 @@
 			}
 			//_IndirectType
 
-
-
             fixed4 MyFragmentProgram (Interpolators i) : SV_Target
             {
 				//return fixed4(i.normal,1);
@@ -463,13 +461,11 @@
 				diff = (diff * 0.5 + 0.5);
 				float4 mask = tex2D(_Mask, i.uv);
 				
-				
 				fixed3 diffuse = lerp(shadowCol,diffuse, shadowContrast);
 				diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
 				
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic),mask.r);
 				
-
 				//计算阴影叠加
 
 				//return float4(diffuse,1);
@@ -493,6 +489,10 @@
 
 				fixed lineCol = _SpecularCol.a;
 				lineCol = lerp(lineCol,_DarkenInnerLine,step(lineCol,_DarkenInnerLine));
+				
+				//高光信息
+				fixed ilmTexR = _SpecularCol.r;
+				fixed ilmTexB = _SpecularCol.b;
 
 				//高光部分
 				fixed spec = dot(i.normal, halfVector);
@@ -501,11 +501,8 @@
 				
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
 				
-				fixed4 finalColor = fixed4(ambient + diffuse + specular,1);
+				fixed4 finalColor = fixed4(ambient + diffuse + specular*ilmTexR,1);
 
-				//高光信息
-				fixed ilmTexR = _SpecularCol.r;
-				fixed ilmTexB = _SpecularCol.b;
 				//叠加阴影贴图和高光贴图
 				//finalColor.rgb += shadowCol*0.5f*step(_SpecStep,ilmTexB*pow(nh,_Shininess*ilmTexR*128)) *shadowContrast ;
 				finalColor.rgb *= lineCol;
