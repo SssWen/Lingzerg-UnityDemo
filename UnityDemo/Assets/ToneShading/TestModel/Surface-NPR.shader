@@ -6,9 +6,14 @@
 		//*** 完成 *** 2 环境映射 支持反射球和天空盒反射
 		//*** 完成 *** 3 顶点色做mask 控制法线映射球
 		
-		//1张 diffuse
-		//1张 4通道控制图  R=金属 G=高光 B=AO（阴影）alpha=内描边
+		//*** 完成 *** 1张 diffuse
+		//*** 完成 *** 1张 4通道控制图  R=金属 G=高光 B=AO（阴影）alpha=内描边
+
 		//1张 单通道菲涅尔
+
+		// 1 C# 加一个质心调整脚本
+		// 2 C# 支持复杂渐变颜色过渡
+		// 3 先做一个临时版本的, 每个颜色增加一个滑动条,用来表示当前颜色的强度
 
 		[Header(Color)]
         _MainTex ("Main Texture", 2D) = "while" {}
@@ -24,21 +29,22 @@
 		[Space(50)]
 		[Header(ColorRamp)]
 		_Color("Base Color", Color) = (1, 1, 1, 1)
-		_ColorIntensity("Color Intensity", Range(0.01,1)) = 0.2
+		_ColorIntensity("Color Intensity", Range(0,1)) = 0.2
+
 		[Space(10)]
 		_BrightColor("Bright", Color) = (1, 1, 1, 1)
-		_BrightIntensity("Bright Intensity", Range(0.01,2)) = 0.2
+		_BrightIntensity("Bright Intensity", Range(0,2)) = 0.2
 		[Space(10)]
 		_GrayColor("Gray", Color) = (1, 1, 1, 1)
-		_GrayIntensity("Gray Intensity", Range(0.01,1)) = 0.2
+		_GrayIntensity("Gray Intensity", Range(0,1)) = 0.2
 		[Space(10)]
 		_DarkColor("Dark", Color) = (1, 1, 1, 1)
-		_DarkIntensity("Dark Intensity", Range(0.01,1)) = 0.2
+		_DarkIntensity("Dark Intensity", Range(0,1)) = 0.2
 		
 		[Space(50)]
 		[Header(TexRamp)]
 		_Ramp ("Ramp Texture", 2D) = "white" {}
-		_RampIn("Ramp In", Range(0.01,1)) = 0.2
+		_RampIn("Ramp In", Range(0,1)) = 0.2
 
 		[Space(50)]
 		[Header(Indirect Light)]
