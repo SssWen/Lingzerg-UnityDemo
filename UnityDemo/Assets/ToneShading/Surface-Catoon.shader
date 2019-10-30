@@ -5,6 +5,11 @@
 		//*** 完成 *** 1 高光颜色 和 暗部颜色 固有色 + 滑块
 		//*** 完成 *** 2 环境映射 支持反射球和天空盒反射
 		//*** 完成 *** 3 顶点色做mask 控制法线映射球
+		
+		//1张 diffuse
+		//1张 4通道控制图  R=金属 G=高光 B=AO（阴影）alpha=内描边 
+		//1张 单通道菲涅尔
+
 		[Header(Color)]
         _MainTex ("Texture", 2D) = "while" {}
 		_ShadowTex("Shadow Texture", 2D) = "black" {}
