@@ -246,9 +246,9 @@
 				//i.normal = UnityObjectToWorldNormal(v.normal);
 				//i.worldNormal  = UnityObjectToWorldNormal(v.normal);
 				i.normal = normalize(UnityObjectToWorldNormal(v.normal));
-				i.normal = normalize(lerp(UnityObjectToWorldNormal(v.normal),v.vertex.xyz-_R.rgb, v.color.r));
-				i.normal = normalize(lerp(i.normal,v.vertex.xyz-_G.rgb, v.color.g));
-				i.normal = normalize(lerp(i.normal,v.vertex.xyz-_B.rgb, v.color.b));
+				i.normal = normalize(lerp(UnityObjectToWorldNormal(v.normal),(v.vertex.xyz-_R.rgb)*-1, v.color.r));
+				i.normal = normalize(lerp(i.normal,(v.vertex.xyz-_G.rgb)*-1, v.color.g));
+				i.normal = normalize(lerp(i.normal,(v.vertex.xyz-_B.rgb)*-1, v.color.b));
 
 			//#if defined(BINORMAL_PER_FRAGMENT)
 			//	i.tangent = fixed4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
@@ -356,7 +356,6 @@
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz * albedo;
 
-				
 				//菲涅尔F
 				//unity_ColorSpaceDielectricSpec.rgb这玩意大概是float3(0.04, 0.04, 0.04)，就是个经验值
 				float3 F0 = lerp(unity_ColorSpaceDielectricSpec.rgb, albedo, _Metallic);

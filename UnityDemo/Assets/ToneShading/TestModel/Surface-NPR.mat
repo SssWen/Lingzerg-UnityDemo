@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Surface-NPR
   m_Shader: {fileID: 4800000, guid: e2418cff757d4a343822bcb6d5b36ac3, type: 3}
-  m_ShaderKeywords: _INDIRECTTYPE_ON
+  m_ShaderKeywords: _INDIRECTTYPE_ON _RAMPSWITCH_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -80,11 +80,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _BrightIntensity: 0.01
+    - _BrightIntensity: 2
     - _BumpScale: 1
-    - _ColorIntensity: 0.01
+    - _ColorIntensity: 0
     - _Cutoff: 0.5
-    - _DarkIntensity: 0.01
+    - _DarkIntensity: 1
     - _DarkenInnerLine: 0.2
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
@@ -94,7 +94,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _GrayIntensity: 0.01
+    - _GrayIntensity: 1
     - _IndirectType: 1
     - _Metallic: 1
     - _Mode: 0
@@ -102,7 +102,7 @@ Material:
     - _OutlineWidth: 5
     - _Parallax: 0.02
     - _RampIn: 1
-    - _RampSwitch: 0
+    - _RampSwitch: 1
     - _ShadowContrast: 1
     - _ShadowScale: 1
     - _Shininess: 0.45
@@ -118,11 +118,11 @@ Material:
     - _B: {r: 0, g: 0, b: 0, a: 1}
     - _BrightColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DarkColor: {r: 1, g: 1, b: 1, a: 1}
+    - _DarkColor: {r: 0, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FresnelCol: {r: 1, g: 1, b: 1, a: 1}
     - _G: {r: 0, g: 0, b: 0, a: 1}
-    - _GrayColor: {r: 1, g: 1, b: 1, a: 1}
+    - _GrayColor: {r: 0.4339623, g: 0.4339623, b: 0.4339623, a: 1}
     - _OutlineColor: {r: 0.254717, g: 0, b: 0, a: 1}
     - _R: {r: 0, g: 0, b: 1.2, a: 1}
     - _ShadowColor: {r: 1, g: 1, b: 1, a: 1}
