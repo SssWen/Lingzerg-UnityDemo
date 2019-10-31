@@ -73,6 +73,10 @@
 		_ShadowScale ("Shadow Scale", Range(0, 1)) = 1
 
 		[Space(50)]
+		[Header(Innerline)]
+		_InnerIntansity ("Shadow Scale", Range(0, 1)) = 0.5
+
+		[Space(50)]
 		[Header(Outline)]
 		_OutlineColor("Outline Color", Color) = (0,0,0,1)
 		_OutlineWidth("Outline Width", Float) = 0.01
@@ -229,6 +233,8 @@
 
 			sampler2D _Ramp;
 			fixed _RampIn;
+
+			fixed _InnerIntansity;
 
 			fixed4 _SpecularColor,_ShadowColor;
 			fixed _SpecularScale,_ShadowScale;
@@ -423,7 +429,7 @@
 
 				//叠加阴影贴图和高光贴图
 				//finalColor.rgb += shadowCol*0.5f*step(_SpecStep,ilmTexB*pow(nh,_Shininess*ilmTexR*128)) *shadowContrast ;
-				finalColor.rgb *= lerp(0, 1, mask.a);
+				finalColor.rgb *= lerp(0+1-_InnerIntansity, 1, mask.a);
 				
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
 				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0), mask.r), _IndirectType);
