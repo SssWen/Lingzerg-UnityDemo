@@ -12,9 +12,12 @@
 		//1张 单通道菲涅尔
 
 		// 1 C# 加一个质心调整脚本
-		// 2 C# 支持复杂渐变颜色过渡
-		// 3 先做一个临时版本的, 每个颜色增加一个滑动条,用来表示当前颜色的强度
-
+		// 2 尝试修正描边的不连续以及脱离模型表面
+		//
+		// *** 低优先级任务 ***
+		// * C# 支持复杂渐变颜色过渡
+		// * 先做一个临时版本的, 每个颜色增加一个滑动条,用来表示当前颜色的强度
+		//
 		[Header(Color)]
         _MainTex ("Main Texture", 2D) = "while" {}
 		_Mask("Mask Texture", 2D) = "while" {}
@@ -369,11 +372,11 @@
 
 				//fixed3 diffuse = lerp(diffuse,_ShadowColor, mask.b);
 				fixed3 diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
-				diffuse += lerp(_ShadowColor,0, mask.b)*_ShadowScale;
+				diffuse = lerp(diffuse, _ShadowColor,(1-mask.b)*_ShadowScale*(1-nl));//
+				
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic), mask.r);
 				
 				//计算阴影叠加
-
 				//return float4(diffuse,1);
 
 				//粗糙度
@@ -393,22 +396,19 @@
 				//float GRight = nv / lerp(nv, 1, kInDirectLight);
 				//float G = GLeft * GRight;
 
-
 				//高光部分
 				fixed spec = dot(i.normal, halfVector);
 				fixed w = fwidth(spec) * 2.0;// (D * G * F * 0.25) / (nv * nl);//
-				float3 specular =_SpecularColor.rgb * lerp(0, 1, mask.g) * _SpecularScale;
-				
-				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
+				//* lerp(0, 1, mask.g) * _SpecularScale;
+				fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _SpecularScale - 1)) * _SpecularScale* lerp(0, 1, mask.g)*nl;
 				
 				fixed4 finalColor = fixed4(ambient + diffuse + specular,1);
 
 				//叠加阴影贴图和高光贴图
 				//finalColor.rgb += shadowCol*0.5f*step(_SpecStep,ilmTexB*pow(nh,_Shininess*ilmTexR*128)) *shadowContrast ;
-				finalColor.rgb *= lerp(0, 1, mask.b);
-
+				//finalColor.rgb *= lerp(0, 1, mask.b);
 				
-
+				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
 				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0),mask.r), _IndirectType);
 				fresnel = lerp(0,fresnel,mask.g);
 
