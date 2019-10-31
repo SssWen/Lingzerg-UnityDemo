@@ -23,6 +23,13 @@
 		_Mask("Mask Texture", 2D) = "while" {}
 		_Mask2("Mask2 Texture", 2D) = "while" {}
 
+
+		
+		[Space(50)]
+		[Header(MappingNormalSwitch)]
+		[Toggle]
+		_MappingNormalSwitch ("Mapping Normal Switch Type",Float) = 0
+
 		//highlight
 		//shadow
 		[Space(50)]
@@ -215,7 +222,7 @@
 			sampler2D _Mask,_Mask2;
 			sampler2D _LUT;
 
-			fixed _RampSwitch;
+			fixed _RampSwitch,_MappingNormalSwitch;
 
 			fixed4 _Color,_BrightColor,_GrayColor,_DarkColor;
 			fixed _ColorIntensity,_BrightIntensity,_GrayIntensity,_DarkIntensity;
@@ -239,6 +246,13 @@
 
 			//#include "InitNormal.cginc"
 
+			fixed3 getNormal(fixed3 pos, fixed3 normal,fixed3 color) {
+				normal = normalize(lerp(normal,(pos.xyz-_R.rgb)*-1, color.r));
+				normal = normalize(lerp(normal,(pos.xyz-_G.rgb)*-1, color.g));
+				normal = normalize(lerp(normal,(pos.xyz-_B.rgb)*-1, color.b));
+				return normal;
+			}
+
             Interpolators MyVertexProgram (VertexData v)
             {
                 Interpolators i = (Interpolators)0;
@@ -251,9 +265,8 @@
 				//i.normal = UnityObjectToWorldNormal(v.normal);
 				//i.worldNormal  = UnityObjectToWorldNormal(v.normal);
 				i.normal = normalize(UnityObjectToWorldNormal(v.normal));
-				i.normal = normalize(lerp(UnityObjectToWorldNormal(v.normal),(v.vertex.xyz-_R.rgb)*-1, v.color.r));
-				i.normal = normalize(lerp(i.normal,(v.vertex.xyz-_G.rgb)*-1, v.color.g));
-				i.normal = normalize(lerp(i.normal,(v.vertex.xyz-_B.rgb)*-1, v.color.b));
+				i.normal = lerp(i.normal,getNormal(v.vertex.xyz, i.normal,i.color),_MappingNormalSwitch);
+				
 
 			//#if defined(BINORMAL_PER_FRAGMENT)
 			//	i.tangent = fixed4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
@@ -404,7 +417,8 @@
 				fixed w = fwidth(spec) * 2.0;// (D * G * F * 0.25) / (nv * nl);//
 				//* lerp(0, 1, mask.g) * _SpecularScale;
 				fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _SpecularScale - 1)) * _SpecularScale* lerp(0, 1, mask.g)*nl;
-				
+				//return fixed4(specular,1);
+
 				fixed4 finalColor = fixed4(ambient + diffuse + specular,1);
 
 				//叠加阴影贴图和高光贴图
@@ -412,7 +426,7 @@
 				//finalColor.rgb *= lerp(0, 1, mask.b);
 				
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
-				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0),mask.r), _IndirectType);
+				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0), mask.r), _IndirectType);
 
 				fresnel = lerp(0,fresnel,mask2.r);
 
