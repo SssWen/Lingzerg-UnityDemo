@@ -7,9 +7,11 @@ ModelImporter:
     400000: //RootNode
     2100000: body
     2100002: 15 - Default
+    2100004: eye
     2300000: //RootNode
     3300000: //RootNode
     4300000: body
+    4300002: zhanglao
   externalObjects: {}
   materials:
     importMaterials: 1
