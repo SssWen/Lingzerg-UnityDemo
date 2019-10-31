@@ -21,6 +21,7 @@
 		[Header(Color)]
         _MainTex ("Main Texture", 2D) = "while" {}
 		_Mask("Mask Texture", 2D) = "while" {}
+		_Mask2("Mask2 Texture", 2D) = "while" {}
 
 		//highlight
 		//shadow
@@ -170,6 +171,7 @@
 
         Pass
         {
+			Name "NPR Shading"
 			Tags { "LightMode"="ForwardBase" }
 			
 			Cull Back
@@ -210,7 +212,7 @@
             float4 _MainTex_ST;
 
 
-			sampler2D _Mask;
+			sampler2D _Mask,_Mask2;
 			sampler2D _LUT;
 
 			fixed _RampSwitch;
@@ -410,7 +412,7 @@
 				
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
 				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0),mask.r), _IndirectType);
-				fresnel = lerp(0,fresnel,mask.g);
+				fresnel = lerp(0,fresnel,_Mask2.r);
 
 				finalColor *= _LightColor0;
 			 	finalColor *= 1 + UNITY_LIGHTMODEL_AMBIENT;
