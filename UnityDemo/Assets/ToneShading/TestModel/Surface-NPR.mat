@@ -104,7 +104,8 @@ Material:
     - _Metallic: 1
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _OutlineWidth: 5
+    - _OutlineColorIntensity: 1
+    - _OutlineWidth: 3
     - _Parallax: 0.02
     - _RampIn: 0.56
     - _RampSwitch: 0

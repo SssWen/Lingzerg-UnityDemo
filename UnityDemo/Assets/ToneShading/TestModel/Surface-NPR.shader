@@ -76,7 +76,7 @@
 		[Header(Outline)]
 		_OutlineColor("Outline Color", Color) = (0,0,0,1)
 		_OutlineWidth("Outline Width", Float) = 0.01
-
+		_OutlineColorIntensity("Outline Color Intensity", Float) = 1
 		/** Special - 特殊功能 - 顶点色控制顶点法线朝向质心 **/
 		[Space(50)]
 		[Header(VertexColorControllPosPoint)]
@@ -121,7 +121,7 @@
 			#include "UnityCG.cginc"
 			#pragma target 3.0
 			
-			uniform float _OutlineWidth;
+			uniform float _OutlineWidth,_OutlineColorIntensity;
 			uniform float _FarthestDistance;
 			uniform float _NearestDistance;
 			uniform float4 _OutlineColor;
@@ -161,8 +161,8 @@
 				float4 vPos = float4(UnityObjectToViewPos(v.vertex),1.0f);
 				float cameraDis = length(vPos.xyz);
 
-				o.pos = UnityObjectToClipPos(float4(v.vertex.xyz + v.normal*outlineWidth*cameraDis*v.color.a, 1));
-				o.pos.z = o.pos.z + _OffsetZ * viewDirectionVP.z;
+				o.pos = UnityObjectToClipPos(float4(v.vertex.xyz + v.normal*outlineWidth*cameraDis, 1));
+				o.pos.z = o.pos.z*v.color.a*_OutlineColorIntensity + _OffsetZ* viewDirectionVP.z;
 				return o;
 			}
 
