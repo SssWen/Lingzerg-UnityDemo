@@ -371,6 +371,7 @@
 				fixed diff =  dot(i.normal, lightDir);
 				diff = (diff * 0.5 + 0.5);
 				float4 mask = tex2D(_Mask, i.uv);
+				float4 mask2 = tex2D(_Mask2, i.uv);
 
 				//fixed3 diffuse = lerp(diffuse,_ShadowColor, mask.b);
 				fixed3 diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
@@ -412,7 +413,8 @@
 				
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
 				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0),mask.r), _IndirectType);
-				fresnel = lerp(0,fresnel,_Mask2.r);
+
+				fresnel = lerp(0,fresnel,mask2.r);
 
 				finalColor *= _LightColor0;
 			 	finalColor *= 1 + UNITY_LIGHTMODEL_AMBIENT;
