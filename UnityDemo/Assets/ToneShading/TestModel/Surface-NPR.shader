@@ -18,11 +18,14 @@
 		// * C# 支持复杂渐变颜色过渡
 		// * 先做一个临时版本的, 每个颜色增加一个滑动条,用来表示当前颜色的强度
 		//
+
+		//光照+法线 计算新法线 = N=_scale*L+N
+		//高光流动
+
 		[Header(Color)]
         _MainTex ("Main Texture", 2D) = "while" {}
 		_Mask("Mask Texture", 2D) = "while" {}
 		_Mask2("Mask2 Texture", 2D) = "while" {}
-
 
 		
 		[Space(50)]
@@ -30,6 +33,12 @@
 		[Toggle]
 		_MappingNormalSwitch ("Mapping Normal Switch Type",Float) = 0
 
+		[Space(50)]
+		[Header(LightDirNormal)]
+		[Toggle]
+		_LightDirNormalSwitch ("Mapping Normal Switch Type",Float) = 0
+		_LightIntansity ("Light Intansity",Float) = 1
+		
 		//highlight
 		//shadow
 		[Space(50)]
@@ -226,7 +235,7 @@
 			sampler2D _Mask,_Mask2;
 			sampler2D _LUT;
 
-			fixed _RampSwitch,_MappingNormalSwitch;
+			fixed _RampSwitch,_MappingNormalSwitch,_LightDirNormalSwitch;
 
 			fixed4 _Color,_BrightColor,_GrayColor,_DarkColor;
 			fixed _ColorIntensity,_BrightIntensity,_GrayIntensity,_DarkIntensity;
@@ -234,7 +243,7 @@
 			sampler2D _Ramp;
 			fixed _RampIn;
 
-			fixed _InnerIntansity;
+			fixed _InnerIntansity,_LightIntansity;
 
 			fixed4 _SpecularColor,_ShadowColor;
 			fixed _SpecularScale,_ShadowScale;
@@ -256,6 +265,9 @@
 				normal = normalize(lerp(normal,(pos.xyz-_R.rgb)*-1, color.r));
 				normal = normalize(lerp(normal,(pos.xyz-_G.rgb)*-1, color.g));
 				normal = normalize(lerp(normal,(pos.xyz-_B.rgb)*-1, color.b));
+
+
+
 				return normal;
 			}
 
@@ -272,8 +284,8 @@
 				//i.worldNormal  = UnityObjectToWorldNormal(v.normal);
 				i.normal = normalize(UnityObjectToWorldNormal(v.normal));
 				i.normal = lerp(i.normal,getNormal(v.vertex.xyz, i.normal,i.color),_MappingNormalSwitch);
-				
 
+				i.normal = lerp(i.normal,_WorldSpaceLightPos0.xyz*_LightIntansity + i.normal,_LightDirNormalSwitch);
 			//#if defined(BINORMAL_PER_FRAGMENT)
 			//	i.tangent = fixed4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
 			//#else
