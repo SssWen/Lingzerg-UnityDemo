@@ -377,8 +377,15 @@
 				//假如半角向量和法线点乘等于1 则代表半角向量等于法向量
 
 				fixed4 c = tex2D(_MainTex, i.uv);
+				
+				float4 mask = tex2D(_Mask, i.uv);
+				float4 mask2 = tex2D(_Mask2, i.uv);
+
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz * albedo;
+				ambient *= mask.b*(1-nl);
+
+				//return mask.b;
 
 				//菲涅尔F
 				//unity_ColorSpaceDielectricSpec.rgb这玩意大概是float3(0.04, 0.04, 0.04)，就是个经验值
@@ -389,12 +396,10 @@
 				//漫反射
 				fixed diff =  dot(i.normal, lightDir);
 				diff = (diff * 0.5 + 0.5);
-				float4 mask = tex2D(_Mask, i.uv);
-				float4 mask2 = tex2D(_Mask2, i.uv);
 
 				//fixed3 diffuse = lerp(diffuse,_ShadowColor, mask.b);
 				fixed3 diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
-				diffuse = lerp(diffuse, _ShadowColor,(1-mask.b)*_ShadowScale*(1-nl));//
+				//diffuse = lerp(diffuse, _ShadowColor,(1-mask.b)*_ShadowScale*(1-nl));
 				
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic), mask.r);
 				
