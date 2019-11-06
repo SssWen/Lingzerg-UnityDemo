@@ -19,7 +19,7 @@
 		// * 先做一个临时版本的, 每个颜色增加一个滑动条,用来表示当前颜色的强度
 		//
 
-		//光照+法线 计算新法线 = N=_scale*L+N
+		//*** 完成 *** 光照+法线 计算新法线 = N=_scale*L+N
 		//高光流动
 
 		[Header(Color)]
@@ -27,11 +27,10 @@
 		_Mask("Mask Texture", 2D) = "while" {}
 		_Mask2("Mask2 Texture", 2D) = "while" {}
 
-		
-		[Space(50)]
-		[Header(MappingNormalSwitch)]
-		[Toggle]
-		_MappingNormalSwitch ("Mapping Normal Switch Type",Float) = 0
+		//[Space(50)]
+		//[Header(MappingNormalSwitch)]
+		//[Toggle]
+		//_MappingNormalSwitch ("Mapping Normal Switch Type",Float) = 0
 
 		[Space(50)]
 		[Header(LightDirNormal)]
@@ -76,10 +75,10 @@
 		[Space(50)]
 		[Header(SpecularAndShadow)]
 		_SpecularColor ("Specular Color", Color) = (1, 1, 1, 1)
-		_SpecularScale ("Specular Scale", Range(0, 1)) = 1
+		_SpecularScale ("Specular Scale", Range(0, 0.99)) = 1
 		[Space]
 		_ShadowColor ("Shadow Color", Color) = (0, 0, 0, 1)
-		_ShadowScale ("Shadow Scale", Range(0, 1)) = 1
+		_ShadowScale ("Shadow Scale", Range(0, 0.99)) = 1
 
 		[Space(50)]
 		[Header(Innerline)]
@@ -90,6 +89,7 @@
 		_OutlineColor("Outline Color", Color) = (0,0,0,1)
 		_OutlineWidth("Outline Width", Float) = 0.01
 		_OutlineColorIntensity("Outline Color Intensity", Float) = 1
+
 		/** Special - 特殊功能 - 顶点色控制顶点法线朝向质心 **/
 		[Space(50)]
 		[Header(VertexColorControllPosPoint)]
@@ -266,8 +266,6 @@
 				normal = normalize(lerp(normal,(pos.xyz-_G.rgb)*-1, color.g));
 				normal = normalize(lerp(normal,(pos.xyz-_B.rgb)*-1, color.b));
 
-
-
 				return normal;
 			}
 
@@ -283,7 +281,7 @@
 				//i.normal = UnityObjectToWorldNormal(v.normal);
 				//i.worldNormal  = UnityObjectToWorldNormal(v.normal);
 				i.normal = normalize(UnityObjectToWorldNormal(v.normal));
-				i.normal = lerp(i.normal,getNormal(v.vertex.xyz, i.normal,i.color),_MappingNormalSwitch);
+				//i.normal = lerp(i.normal,getNormal(v.vertex.xyz, i.normal,i.color),_MappingNormalSwitch);
 
 				i.normal = lerp(i.normal,_WorldSpaceLightPos0.xyz*_LightIntansity + i.normal,_LightDirNormalSwitch);
 			//#if defined(BINORMAL_PER_FRAGMENT)
@@ -425,8 +423,8 @@
 
 				////镜面反射部分
 				//D是法线分布函数或者叫正态分部函数，从统计学上估算微平面的取向 - 这里才是高光
-				//float lerpSquareRoughness = pow(lerp(0.002, 1, roughness), 2);//Unity把roughness lerp到了0.002
-				//float D = lerpSquareRoughness / (pow((pow(nh, 2) * (lerpSquareRoughness - 1) + 1), 2) * UNITY_PI);
+				float lerpSquareRoughness = pow(lerp(0.002, 1, roughness), 2);//Unity把roughness lerp到了0.002
+				float D = lerpSquareRoughness / (pow((pow(nh, 2) * (lerpSquareRoughness - 1) + 1), 2) * UNITY_PI);
 
 				////几何遮蔽G 说白了就是粗糙度
 				//float kInDirectLight = pow(squareRoughness + 1, 2) / 8;
@@ -439,7 +437,7 @@
 				fixed spec = dot(i.normal, halfVector);
 				fixed w = fwidth(spec) * 2.0;// (D * G * F * 0.25) / (nv * nl);//
 				//* lerp(0, 1, mask.g) * _SpecularScale;
-				fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _SpecularScale - 1)) * _SpecularScale* lerp(0, 1, mask.g)*nl;
+				fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-D, D, D + _SpecularScale - 1)) * _SpecularScale* lerp(0, 1, mask.g)*nl;
 				//return fixed4(specular,1);
 
 				fixed4 finalColor = fixed4(ambient + diffuse + specular,1);
