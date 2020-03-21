@@ -22,10 +22,20 @@
 		//*** 完成 *** 光照+法线 计算新法线 = N=_scale*L+N
 		//高光流动
 
+        //*** 新一期任务 ***
+        //4阴影差值，
+        //ramp只对阴影部分有效
+        //ao始终都在
+
+
 		[Header(Color)]
         _MainTex ("Main Texture", 2D) = "while" {}
 		_Mask("Mask Texture", 2D) = "while" {}
 		_Mask2("Mask2 Texture", 2D) = "while" {}
+        _LerpShadow("4 Shadow Texture", 2D) = "black" {}
+
+        
+		_FaceFront ("定义一个正面朝向,用于插值,只读取XZ", Vector) = (0, 0, 1, 1)
 
 		//[Space(50)]
 		//[Header(MappingNormalSwitch)]
@@ -122,6 +132,7 @@
 
         LOD 100
 
+        //描边的Pass
 		Pass
 		{
 			Name "Outline"
@@ -232,8 +243,9 @@
             float4 _MainTex_ST;
 
 
-			sampler2D _Mask,_Mask2;
+			sampler2D _Mask,_Mask2,_LerpShadow;
 			sampler2D _LUT;
+            fixed4 _FaceFront;
 
 			fixed _RampSwitch,_MappingNormalSwitch,_LightDirNormalSwitch;
 
@@ -320,6 +332,34 @@
 			{
 				return F0 + (max(float3(1.0 - roughness, 1.0 - roughness, 1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 			}
+
+            fixed getLerpShadow(float4 lerpShadow,fixed3 lightDir) {
+
+                fixed3 lightDirProject = fixed3(lightDir.x,0,lightDir.z);
+                fixed dotValue =  dot(lightDirProject,normalize(_FaceFront.xyz));
+
+                fixed crossValue = normalize(cross(lightDirProject,normalize(_FaceFront.xyz)).y);
+
+                if (crossValue < 0) {
+                    if(dotValue >= 0) {
+                        return lerp(1-lerpShadow.r,1-lerpShadow.g,abs(dotValue));
+                    } else {
+                        return lerp(1-lerpShadow.r, lerpShadow.a,abs(dotValue));
+                    }
+                } else {
+                    if(dotValue > 0) {
+                        return lerp(1-lerpShadow.b,1-lerpShadow.g,abs(dotValue));
+                    } else {
+                        return lerp(1-lerpShadow.b, lerpShadow.a,abs(dotValue));
+                    }
+                }
+
+
+                //return lerp(,lerp(1-lerpShadow.b, lerpShadow.a,crossValue*dotValue),dotValue);
+
+
+                //return 1-lerpShadow.b;
+            }
 			
 			fixed3 getIndirectLight(Interpolators i, float3 albedo,float3 ambient,float perceptualRoughness,float roughness,float nv,float3 F0 ) {
 				/*间接光计算*/
@@ -390,12 +430,15 @@
 				
 				float4 mask = tex2D(_Mask, i.uv);
 				float4 mask2 = tex2D(_Mask2, i.uv);
+                float4 lerpShadow = tex2D(_LerpShadow,i.uv);
+                
 
 				fixed3 albedo = c.rgb * _Color.rgb;
-				fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz * albedo;
-				ambient *= mask.b*(1-nl);
-
-				//return mask.b;
+				fixed3 ambient = albedo;
+				ambient *= mask.b;//*(1-nl)
+                ambient *= getLerpShadow(lerpShadow,lightDir);
+				//return getLerpShadow(lerpShadow,lightDir);
+                //return fixed4(ambient,1);
 
 				//菲涅尔F
 				//unity_ColorSpaceDielectricSpec.rgb这玩意大概是float3(0.04, 0.04, 0.04)，就是个经验值
@@ -408,7 +451,10 @@
 				diff = (diff * 0.5 + 0.5);
 
 				//fixed3 diffuse = lerp(diffuse,_ShadowColor, mask.b);
-				fixed3 diffuse = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
+                fixed3 rampColor = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
+
+				fixed3 diffuse = lerp(rampColor,albedo,mask.b).rgb;
+
 				//diffuse = lerp(diffuse, _ShadowColor,(1-mask.b)*_ShadowScale*(1-nl));
 				
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic), mask.r);
