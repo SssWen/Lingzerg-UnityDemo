@@ -28,7 +28,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LerpShadow:
-        m_Texture: {fileID: 2800000, guid: c763a1e7f75e9424ebce9551daa377c3, type: 3}
+        m_Texture: {fileID: 2800000, guid: eb5e134ff0f854850903862a414a3a66, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -70,7 +70,7 @@ Material:
     m_Colors:
     - _B: {r: 0, g: 0, b: 0, a: 1}
     - _BrightColor: {r: 1, g: 0.83994734, b: 0.5235849, a: 1}
-    - _Color: {r: 0.5377358, g: 0.5377358, b: 0.5377358, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DarkColor: {r: 0.26415092, g: 0.058561757, b: 0.058561757, a: 1}
     - _FaceFront: {r: 1, g: 0, b: 0, a: 1}
     - _FresnelCol: {r: 1, g: 1, b: 1, a: 1}

@@ -58,7 +58,7 @@
 		[Space(50)]
 		[Header(ColorRamp)]
 		_Color("Base Color", Color) = (1, 1, 1, 1)
-		_ColorIntensity("Color Intensity", Range(0,1)) = 0.2
+		//_ColorIntensity("Color Intensity", Range(0,1)) = 0.2
 
 		[Space(10)]
 		_BrightColor("Bright", Color) = (1, 1, 1, 1)
@@ -250,7 +250,7 @@
 			fixed _RampSwitch,_MappingNormalSwitch,_LightDirNormalSwitch;
 
 			fixed4 _Color,_BrightColor,_GrayColor,_DarkColor;
-			fixed _ColorIntensity,_BrightIntensity,_GrayIntensity,_DarkIntensity;
+			fixed _BrightIntensity,_GrayIntensity,_DarkIntensity;
 
 			sampler2D _Ramp;
 			fixed _RampIn;
@@ -295,7 +295,7 @@
 				i.normal = normalize(UnityObjectToWorldNormal(v.normal));
 				//i.normal = lerp(i.normal,getNormal(v.vertex.xyz, i.normal,i.color),_MappingNormalSwitch);
 
-				i.normal = lerp(i.normal,_WorldSpaceLightPos0.xyz*_LightIntansity + i.normal,_LightDirNormalSwitch);
+				i.normal = normalize(lerp(i.normal,_WorldSpaceLightPos0.xyz*_LightIntansity + i.normal,_LightDirNormalSwitch));
 			//#if defined(BINORMAL_PER_FRAGMENT)
 			//	i.tangent = fixed4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
 			//#else
@@ -342,15 +342,15 @@
 
                 if (crossValue < 0) {
                     if(dotValue >= 0) {
-                        return lerp(1-lerpShadow.r,1-lerpShadow.g,abs(dotValue));
+                        return lerp(lerpShadow.r,lerpShadow.g,abs(dotValue));
                     } else {
-                        return lerp(1-lerpShadow.r, lerpShadow.a,abs(dotValue));
+                        return lerp(lerpShadow.r, lerpShadow.a,abs(dotValue));
                     }
                 } else {
                     if(dotValue > 0) {
-                        return lerp(1-lerpShadow.b,1-lerpShadow.g,abs(dotValue));
+                        return lerp(lerpShadow.b,lerpShadow.g,abs(dotValue));
                     } else {
-                        return lerp(1-lerpShadow.b, lerpShadow.a,abs(dotValue));
+                        return lerp(lerpShadow.b, lerpShadow.a,abs(dotValue));
                     }
                 }
 
@@ -486,7 +486,7 @@
 				fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-D, D, D + _SpecularScale - 1)) * _SpecularScale* lerp(0, 1, mask.g)*nl;
 				//return fixed4(specular,1);
 
-				fixed4 finalColor = fixed4(ambient + diffuse + specular,1);
+				fixed4 finalColor = fixed4(ambient * diffuse + specular,1);
 
 				//叠加阴影贴图和高光贴图
 				//finalColor.rgb += shadowCol*0.5f*step(_SpecStep,ilmTexB*pow(nh,_Shininess*ilmTexR*128)) *shadowContrast ;
