@@ -111,9 +111,9 @@
 		[Space(50)]
 		[Header(FresnelMetallic)]
 		_FresnelCol("Fresnel Color", Color) = (1,1,1,1)
-		_FresnelBase("Fresnel Base", Range(0.0, 1.0)) = 0
-		_FresnelScale("Fresnel Scale", Range(0.0, 1.0)) = 0.0
-		_FresnelPow("Fresnel Pow", Range(0, 5)) = 0 //幂数
+		_FresnelBase("Fresnel Base", Range(0.0, 1.0)) = 1.0
+		_FresnelScale("Fresnel Scale", Range(0.0, 1.0)) = 1.0
+		_FresnelPow("Fresnel Pow", Range(0, 5)) = 5.0 //幂数
 
 		[Space(50)]
 		[Header(Mask)]
@@ -175,7 +175,8 @@
 
 				float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - o.pos.xyz);
 				float4 viewDirectionVP = mul(UNITY_MATRIX_VP, float4(viewDirection.xyz, 1));
-
+				
+				
 			#if defined(UNITY_REVERSED_Z)
 				_OffsetZ = _OffsetZ * -0.01;
 			#else
@@ -219,6 +220,7 @@
             {
                 float4 vertex : POSITION;
 				fixed3 normal : NORMAL;
+				
 				//fixed4 tangent : TANGENT;
 				fixed4 color : COLOR;
                 float2 uv : TEXCOORD0;
@@ -230,6 +232,8 @@
 				fixed4 color : COLOR;
                 float2 uv : TEXCOORD0;
 				fixed3 normal : TEXCOORD1;
+				fixed3 originNormal : TEXCOORD2;
+				fixed3 V : TEXCOORD3;
 			//#if defined(BINORMAL_PER_FRAGMENT) //是否计算次法线
 			//	fixed4 tangent : TEXCOORD2;
 			//#else 
@@ -294,6 +298,9 @@
 				//i.worldNormal  = UnityObjectToWorldNormal(v.normal);
 				i.normal = normalize(UnityObjectToWorldNormal(v.normal));
 				//i.normal = lerp(i.normal,getNormal(v.vertex.xyz, i.normal,i.color),_MappingNormalSwitch);
+
+				i.V = normalize(WorldSpaceViewDir(v.vertex));
+				i.originNormal = normalize(UnityObjectToWorldNormal(v.normal));
 
 				i.normal = normalize(lerp(i.normal,_WorldSpaceLightPos0.xyz*_LightIntansity + i.normal,_LightDirNormalSwitch));
 			//#if defined(BINORMAL_PER_FRAGMENT)
@@ -467,7 +474,7 @@
 				float roughness = perceptualRoughness * perceptualRoughness;
 				//float squareRoughness = roughness * roughness;
 
-				////镜面反射部分
+				//镜面反射部分
 				//D是法线分布函数或者叫正态分部函数，从统计学上估算微平面的取向 - 这里才是高光
 				float lerpSquareRoughness = pow(lerp(0.002, 1, roughness), 2);//Unity把roughness lerp到了0.002
 				float D = lerpSquareRoughness / (pow((pow(nh, 2) * (lerpSquareRoughness - 1) + 1), 2) * UNITY_PI);
@@ -492,16 +499,18 @@
 				//finalColor.rgb += shadowCol*0.5f*step(_SpecStep,ilmTexB*pow(nh,_Shininess*ilmTexR*128)) *shadowContrast ;
 				finalColor.rgb *= lerp(0+1-_InnerIntansity, 1, mask.a);
 				
-				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.normal, viewDir), _FresnelPow);
+				//float fresnel = _fresnelBase + _fresnelScale*pow(1 - dot(N, V), _fresnelIndensity);
+//return fixed4(i.originNormal,1);
+				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.originNormal, i.V), _FresnelPow);
 				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0), mask.r), _IndirectType);
 
-				fresnel = lerp(0,fresnel,mask2.r);
+				//fresnel = lerp(0,fresnel,mask2.r);
 
 				finalColor *= _LightColor0;
 			 	finalColor *= 1 + UNITY_LIGHTMODEL_AMBIENT;
 				
 				finalColor.a = c.a;
-				
+				//return fixed4(lerp(1, _FresnelCol.rgb, fresnel)*_FresnelCol.a, 1);
 				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a+IndirectResult, 1);
             }
             ENDCG
