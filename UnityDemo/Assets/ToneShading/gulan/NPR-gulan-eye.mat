@@ -7,13 +7,13 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: NPR-gulan
-  m_Shader: {fileID: 4800000, guid: e2418cff757d4a343822bcb6d5b36ac3, type: 3}
+  m_Name: NPR-gulan-eye
+  m_Shader: {fileID: 4800000, guid: 9e678f4fea4334eb2bfe4eed5dd832dc, type: 3}
   m_ShaderKeywords: _INDIRECTTYPE_ON _LIGHTDIRNORMALSWITCH_ON _RAMPSWITCH_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 3000
   stringTagMap: {}
   disabledShaderPasses: []
   m_SavedProperties:
@@ -21,6 +21,30 @@ Material:
     m_TexEnvs:
     - _4Shadow:
         m_Texture: {fileID: 2800000, guid: c763a1e7f75e9424ebce9551daa377c3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EyeTex:
+        m_Texture: {fileID: 2800000, guid: 308dedb3d177e4f23bee24999d6fb746, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LUT:
@@ -43,35 +67,63 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Ramp:
         m_Texture: {fileID: 2800000, guid: 18ab5ce4be2d3e24f899ef0223cb253f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _BrightIntensity: 1.6
+    - _BumpScale: 1
     - _ColorIntensity: 1
+    - _Cutoff: 0.5
     - _DarkIntensity: 0.41
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 0
     - _FresnelBase: 0.045
     - _FresnelPow: 2.11
     - _FresnelScale: 0.982
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
     - _GrayIntensity: 1
     - _IndirectType: 1
     - _InnerIntansity: 1
     - _LightDirNormalSwitch: 1
     - _LightIntansity: 0
     - _Metallic: 0.189
+    - _Mode: 0
+    - _OcclusionStrength: 1
     - _OutlineColorIntensity: 1
     - _OutlineWidth: 3
+    - _Parallax: 0.02
     - _RampIn: 0.56
     - _RampSwitch: 1
     - _ShadowScale: 0.99
     - _Smoothness: 0
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
     - _SpecularScale: 0.99
+    - _SrcBlend: 1
+    - _UVSec: 0
+    - _ZWrite: 1
     m_Colors:
     - _B: {r: 0, g: 0, b: 0, a: 1}
     - _BrightColor: {r: 1, g: 0.83994734, b: 0.5235849, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DarkColor: {r: 0.26415092, g: 0.058561757, b: 0.058561757, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FaceFront: {r: 1, g: 0, b: 0, a: 1}
     - _FresnelCol: {r: 1, g: 0.051886797, b: 0.051886797, a: 1}
     - _G: {r: 0, g: 0, b: 0, a: 1}

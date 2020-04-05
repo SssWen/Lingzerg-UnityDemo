@@ -500,11 +500,11 @@
 				finalColor.rgb *= lerp(0+1-_InnerIntansity, 1, mask.a);
 				
 				//float fresnel = _fresnelBase + _fresnelScale*pow(1 - dot(N, V), _fresnelIndensity);
-//return fixed4(i.originNormal,1);
+				//return fixed4(i.originNormal,1);
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.originNormal, i.V), _FresnelPow);
 				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0), mask.r), _IndirectType);
 
-				//fresnel = lerp(0,fresnel,mask2.r);
+				fresnel = lerp(0,fresnel,mask2.r);
 
 				finalColor *= _LightColor0;
 			 	finalColor *= 1 + UNITY_LIGHTMODEL_AMBIENT;
