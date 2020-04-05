@@ -115,6 +115,10 @@
 		_FresnelScale("Fresnel Scale", Range(0.0, 1.0)) = 1.0
 		_FresnelPow("Fresnel Pow", Range(0, 5)) = 5.0 //幂数
 
+		_FresnelMin("Fresnel Smoothstep Min", Range(0, 2)) = 1.0 //菲涅尔最小值
+		_FresnelMax("Fresnel Smoothstep Max", Range(0, 2)) = 1.0 //菲涅尔最大值
+		_FresnelSmooth("Fresnel Smooth", Range(0, 2)) = 1.0 //菲涅尔最大值
+
 		[Space(50)]
 		[Header(Mask)]
 		_LUT("LUT", 2D) = "white" {}
@@ -131,7 +135,7 @@
         Tags { "RenderType"="Opaque" }
 
         LOD 100
-/*
+/***
         //描边的Pass
 		Pass
 		{
@@ -200,9 +204,9 @@
 
 			ENDCG
 		}
-*/
+***/
 
-Pass
+	Pass
 	{
 	    Tags {"LightMode"="ForwardBase"}
 			 
@@ -326,6 +330,9 @@ Pass
 			fixed _FresnelScale;
 			fixed _FresnelPow;
 			fixed4 _FresnelCol;
+			fixed _FresnelMin;
+			fixed _FresnelMax;
+			fixed _FresnelSmooth;
 
 			fixed4 _R,_G,_B;
 
@@ -553,12 +560,17 @@ Pass
 				//finalColor.rgb += shadowCol*0.5f*step(_SpecStep,ilmTexB*pow(nh,_Shininess*ilmTexR*128)) *shadowContrast ;
 				finalColor.rgb *= lerp(0+1-_InnerIntansity, 1, mask.a);
 				
+				/*** 菲涅尔 ***/
 				//float fresnel = _fresnelBase + _fresnelScale*pow(1 - dot(N, V), _fresnelIndensity);
 				//return fixed4(i.originNormal,1);
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.originNormal, i.V), _FresnelPow);
 				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0), mask.r), _IndirectType);
-
+//_FresnelSmoothstep
 				fresnel = lerp(0,fresnel,mask2.r);
+
+ 				fresnel = smoothstep(_FresnelMin, _FresnelMax, fresnel);
+    			fresnel = smoothstep(0, _FresnelSmooth, fresnel);
+
 
 				finalColor *= _LightColor0;
 			 	finalColor *= 1 + UNITY_LIGHTMODEL_AMBIENT;

@@ -51,9 +51,13 @@ Material:
     - _BrightIntensity: 1.6
     - _ColorIntensity: 1
     - _DarkIntensity: 0.41
-    - _FresnelBase: 0.045
-    - _FresnelPow: 4.24
-    - _FresnelScale: 0.982
+    - _FresnelBase: 0.856
+    - _FresnelMax: 0.87
+    - _FresnelMin: 0.35
+    - _FresnelPow: 3.68
+    - _FresnelScale: 1
+    - _FresnelSmooth: 0.76
+    - _FresnelSmoothstep: 5
     - _GrayIntensity: 1
     - _IndirectType: 1
     - _InnerIntansity: 1
