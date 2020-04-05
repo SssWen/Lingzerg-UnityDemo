@@ -61,7 +61,7 @@ Material:
     - _LightIntansity: 0
     - _Metallic: 0.189
     - _OutlineColorIntensity: 1
-    - _OutlineWidth: 3
+    - _OutlineWidth: 0.2
     - _RampIn: 0.56
     - _RampSwitch: 1
     - _ShadowScale: 0.99
