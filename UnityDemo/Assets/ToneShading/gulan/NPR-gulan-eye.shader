@@ -58,7 +58,7 @@
                 fixed dis = distance(fixed3(0,0,0),worldLightDir);
                 fixed edge = sqrt(worldLightDir.x*worldLightDir.x+worldLightDir.z*worldLightDir.z);
                 fixed lightcos = edge/dis;
-                v.vertex.xz = v.vertex.xz-lightcos*worldLightDir.xz*0.003;
+                v.vertex.xz = v.vertex.xz+lightcos*worldLightDir.xz*0.003;
 
 //v.vertex.x = v.vertex.x*sin(_Time.y);
 //v.vertex.z = v.vertex.z*sin(_Time.y);
