@@ -55,7 +55,7 @@ Material:
     - _FresnelMax: 0.87
     - _FresnelMin: 0.35
     - _FresnelPow: 3.68
-    - _FresnelScale: 1
+    - _FresnelScale: 0.593
     - _FresnelSmooth: 0.76
     - _FresnelSmoothstep: 5
     - _GrayIntensity: 1
@@ -65,7 +65,7 @@ Material:
     - _LightIntansity: 0
     - _Metallic: 0.189
     - _OutlineColorIntensity: 1
-    - _OutlineWidth: 0.2
+    - _OutlineWidth: 0.4
     - _RampIn: 0.56
     - _RampSwitch: 1
     - _ShadowScale: 0.99

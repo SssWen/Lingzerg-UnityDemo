@@ -30,8 +30,8 @@
 
 		[Header(Color)]
         _MainTex ("Main Texture", 2D) = "while" {}
-		_Mask("Mask Texture", 2D) = "while" {}
-		_Mask2("Mask2 Texture", 2D) = "while" {}
+		_Mask("Mask Texture,r:金属度,b:阴影", 2D) = "while" {}
+		_Mask2("Mask2 Texture,r:菲涅尔", 2D) = "while" {}
         _LerpShadow("4 Shadow Texture", 2D) = "black" {}
 
         
@@ -206,89 +206,89 @@
 		}
 ***/
 
-	Pass
-	{
-	    Tags {"LightMode"="ForwardBase"}
-			 
-            Cull Front
-            
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #include "UnityCG.cginc"
+		Pass
+		{
+			Tags {"LightMode"="ForwardBase"}
+			Name "Outline"
+			Cull Front
+			
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+			#include "UnityCG.cginc"
 
-            half _OutlineWidth;
-            half4 _OutLineColor;
+			half _OutlineWidth;
+			half4 _OutLineColor;
 
-            struct a2v 
-	        {
-                float4 vertex : POSITION;
-                float3 normal : NORMAL;
-                float2 uv : TEXCOORD0;
-                float4 vertColor : COLOR;
-                float4 tangent : TANGENT;
-            };
+			struct a2v 
+			{
+				float4 vertex : POSITION;
+				float3 normal : NORMAL;
+				float2 uv : TEXCOORD0;
+				float4 vertColor : COLOR;
+				float4 tangent : TANGENT;
+			};
 
-            struct v2f
-	        {
-                float4 pos : SV_POSITION;
-                float3 vertColor : COLOR;
-            };
+			struct v2f
+			{
+				float4 pos : SV_POSITION;
+				float3 vertColor : COLOR;
+			};
 
 
-            v2f vert (a2v v) 
-            {
-                v2f o;
-                UNITY_INITIALIZE_OUTPUT(v2f, o);
-                float4 pos = UnityObjectToClipPos(v.vertex);
-                float3 viewNormal = mul((float3x3)UNITY_MATRIX_IT_MV, v.tangent.xyz);
-                float3 ndcNormal = normalize(TransformViewToProjection(viewNormal.xyz)) * pos.w;//将法线变换到NDC空间
-                float4 nearUpperRight = mul(unity_CameraInvProjection, float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));//将近裁剪面右上角的位置的顶点变换到观察空间
-                float aspect = abs(nearUpperRight.y / nearUpperRight.x);//求得屏幕宽高比
-                ndcNormal.x *= aspect;
-                pos.xy += 0.01 * _OutlineWidth * ndcNormal.xy * v.vertColor.a;//顶点色a通道控制粗细
-                o.pos = pos;
-                o.vertColor = v.vertColor.rgb;
-                return o;
-            }
+			v2f vert (a2v v) 
+			{
+				v2f o;
+				UNITY_INITIALIZE_OUTPUT(v2f, o);
+				float4 pos = UnityObjectToClipPos(v.vertex);
+				float3 viewNormal = mul((float3x3)UNITY_MATRIX_IT_MV, v.tangent.xyz);
+				float3 ndcNormal = normalize(TransformViewToProjection(viewNormal.xyz)) * pos.w;//将法线变换到NDC空间
+				float4 nearUpperRight = mul(unity_CameraInvProjection, float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));//将近裁剪面右上角的位置的顶点变换到观察空间
+				float aspect = abs(nearUpperRight.y / nearUpperRight.x);//求得屏幕宽高比
+				ndcNormal.x *= aspect;
+				pos.xy += 0.01 * _OutlineWidth * ndcNormal.xy * v.vertColor.a;//顶点色a通道控制粗细
+				o.pos = pos;
+				o.vertColor = v.vertColor.rgb;
+				return o;
+			}
 
-            fixed4 frag(v2f i) : SV_TARGET 
-            {
-                return fixed4(_OutLineColor * i.vertColor, 0);//顶点色rgb通道控制描边颜色
-            }
-            ENDCG
-        }
-
-        Pass
-        {
+			fixed4 frag(v2f i) : SV_TARGET 
+			{
+				return fixed4(_OutLineColor * i.vertColor, 0);//顶点色rgb通道控制描边颜色
+			}
+			ENDCG
+		}
+/****/
+		Pass
+		{
 			Name "NPR Shading"
 			Tags { "LightMode"="ForwardBase" }
 			
 			Cull Back
 		
-            CGPROGRAM
+			CGPROGRAM
 
-            #pragma vertex MyVertexProgram
-            #pragma fragment MyFragmentProgram
+			#pragma vertex MyVertexProgram
+			#pragma fragment MyFragmentProgram
 			
 			#include "UnityCG.cginc"
 			#include "UnityPBSLighting.cginc"
 
-            struct VertexData
-            {
-                float4 vertex : POSITION;
+			struct VertexData
+			{
+				float4 vertex : POSITION;
 				fixed3 normal : NORMAL;
 				
 				//fixed4 tangent : TANGENT;
 				fixed4 color : COLOR;
-                float2 uv : TEXCOORD0;
-            };
+				float2 uv : TEXCOORD0;
+			};
 
-            struct Interpolators
-            {
+			struct Interpolators
+			{
 				fixed4 pos : SV_POSITION; //齐次坐标
 				fixed4 color : COLOR;
-                float2 uv : TEXCOORD0;
+				float2 uv : TEXCOORD0;
 				fixed3 normal : TEXCOORD1;
 				fixed3 originNormal : TEXCOORD2;
 				fixed3 V : TEXCOORD3;
@@ -299,15 +299,15 @@
 			//	fixed3 binormal : TEXCOORD3;
 			//#endif
 				fixed3 worldPos : TEXCOORD4;
-            };
+			};
 
-            sampler2D _MainTex;
-            float4 _MainTex_ST;
+			sampler2D _MainTex;
+			float4 _MainTex_ST;
 
 
 			sampler2D _Mask,_Mask2,_LerpShadow;
 			sampler2D _LUT;
-            fixed4 _FaceFront;
+			fixed4 _FaceFront;
 
 			fixed _RampSwitch,_MappingNormalSwitch,_LightDirNormalSwitch;
 
@@ -324,7 +324,7 @@
 
 			fixed _Metallic, _Smoothness,_IndirectType;
 
-			
+		
 			//菲涅尔表面相关逻辑
 			fixed _FresnelBase;
 			fixed _FresnelScale;
@@ -336,8 +336,6 @@
 
 			fixed4 _R,_G,_B;
 
-			//#include "InitNormal.cginc"
-
 			fixed3 getNormal(fixed3 pos, fixed3 normal,fixed3 color) {
 				normal = normalize(lerp(normal,(pos.xyz-_R.rgb)*-1, color.r));
 				normal = normalize(lerp(normal,(pos.xyz-_G.rgb)*-1, color.g));
@@ -346,13 +344,13 @@
 				return normal;
 			}
 
-            Interpolators MyVertexProgram (VertexData v)
-            {
-                Interpolators i = (Interpolators)0;
-                i.pos = UnityObjectToClipPos(v.vertex);
+			Interpolators MyVertexProgram (VertexData v)
+			{
+				Interpolators i = (Interpolators)0;
+				i.pos = UnityObjectToClipPos(v.vertex);
 
 				i.worldPos.xyz = normalize(mul(unity_ObjectToWorld, v.vertex));
-                i.uv = TRANSFORM_TEX(v.uv, _MainTex);
+				i.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				i.color = v.color;
 				
 				//i.normal = UnityObjectToWorldNormal(v.normal);
@@ -364,17 +362,10 @@
 				i.originNormal = normalize(UnityObjectToWorldNormal(v.normal));
 
 				i.normal = normalize(lerp(i.normal,_WorldSpaceLightPos0.xyz*_LightIntansity + i.normal,_LightDirNormalSwitch));
-			//#if defined(BINORMAL_PER_FRAGMENT)
-			//	i.tangent = fixed4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
-			//#else
-			//	i.tangent = UnityObjectToWorldDir(v.tangent.xyz);
-			//	i.binormal = CreateBinormal(i.normal, i.tangent, v.tangent.w);
-			//#endif
-                return i;
-            }
+			
+				return i;
+			}
 
-			//_BrightColor,_DarkColor;
-			//_ColorIntensity,_BrightIntensity,_DarkIntensity;
 			fixed3 getColorRamp(fixed3 albedo,fixed diff) {
 				//_ColorIntensity+_BrightIntensity+_DarkIntensity
 				
@@ -389,8 +380,8 @@
 				
 				fixed3 dark = lerp(_DarkColor.rgb,_GrayColor,saturate(round(diff-brightIntensity-darkIntensity)+1));
 				return _LightColor0.rgb * albedo * lerp(dark.rgb, _BrightColor.rgb,  saturate(round(diff-darkIntensity)));
-			}
-			
+			}	
+		
 			fixed3 getTexRamp(fixed3 albedo,fixed diff)
 			{
 				return (_LightColor0.rgb * albedo * tex2D(_Ramp, float2(clamp(diff*_RampIn,0.01,1), clamp(diff*_RampIn,0.01,1))).rgb).rgb;
@@ -401,34 +392,34 @@
 				return F0 + (max(float3(1.0 - roughness, 1.0 - roughness, 1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 			}
 
-            fixed getLerpShadow(float4 lerpShadow,fixed3 lightDir) {
+			fixed getLerpShadow(float4 lerpShadow,fixed3 lightDir) {
 
-                fixed3 lightDirProject = fixed3(lightDir.x,0,lightDir.z);
-                fixed dotValue =  dot(lightDirProject,normalize(_FaceFront.xyz));
+				fixed3 lightDirProject = fixed3(lightDir.x,0,lightDir.z);
+				fixed dotValue =  dot(lightDirProject,normalize(_FaceFront.xyz));
 
-                fixed crossValue = normalize(cross(lightDirProject,normalize(_FaceFront.xyz)).y);
+				fixed crossValue = normalize(cross(lightDirProject,normalize(_FaceFront.xyz)).y);
 
-                if (crossValue < 0) {
-                    if(dotValue >= 0) {
-                        return lerp(lerpShadow.r,lerpShadow.g,abs(dotValue));
-                    } else {
-                        return lerp(lerpShadow.r, lerpShadow.a,abs(dotValue));
-                    }
-                } else {
-                    if(dotValue > 0) {
-                        return lerp(lerpShadow.b,lerpShadow.g,abs(dotValue));
-                    } else {
-                        return lerp(lerpShadow.b, lerpShadow.a,abs(dotValue));
-                    }
-                }
-
-
-                //return lerp(,lerp(1-lerpShadow.b, lerpShadow.a,crossValue*dotValue),dotValue);
+				if (crossValue < 0) {
+					if(dotValue >= 0) {
+						return lerp(lerpShadow.r,lerpShadow.g,abs(dotValue));
+					} else {
+						return lerp(lerpShadow.r, lerpShadow.a,abs(dotValue));
+					}
+				} else {
+					if(dotValue > 0) {
+						return lerp(lerpShadow.b,lerpShadow.g,abs(dotValue));
+					} else {
+						return lerp(lerpShadow.b, lerpShadow.a,abs(dotValue));
+					}
+				}
 
 
-                //return 1-lerpShadow.b;
-            }
-			
+				//return lerp(,lerp(1-lerpShadow.b, lerpShadow.a,crossValue*dotValue),dotValue);
+
+
+				//return 1-lerpShadow.b;
+			}
+		
 			fixed3 getIndirectLight(Interpolators i, float3 albedo,float3 ambient,float perceptualRoughness,float roughness,float nv,float3 F0 ) {
 				/*间接光计算*/
 				/*
@@ -470,10 +461,9 @@
 				return iblDiffuseResult + iblSpecularResult;
 				
 			}
-			//_IndirectType
 
-            fixed4 MyFragmentProgram (Interpolators i) : SV_Target
-            {
+			fixed4 MyFragmentProgram (Interpolators i) : SV_Target
+			{
 				//return fixed4(i.normal,1);
 				//return i.color;
 				//fixed4 albedo = tex2D(_MainTex, i.uv);
@@ -498,15 +488,15 @@
 				
 				float4 mask = tex2D(_Mask, i.uv);
 				float4 mask2 = tex2D(_Mask2, i.uv);
-                float4 lerpShadow = tex2D(_LerpShadow,i.uv);
-                
+				float4 lerpShadow = tex2D(_LerpShadow,i.uv);
+				
 
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = albedo;
 				ambient *= mask.b;//*(1-nl)
-                ambient *= getLerpShadow(lerpShadow,lightDir);
+				ambient *= getLerpShadow(lerpShadow,lightDir);
 				//return getLerpShadow(lerpShadow,lightDir);
-                //return fixed4(ambient,1);
+				//return fixed4(ambient,1);
 
 				//菲涅尔F
 				//unity_ColorSpaceDielectricSpec.rgb这玩意大概是float3(0.04, 0.04, 0.04)，就是个经验值
@@ -519,7 +509,7 @@
 				diff = (diff * 0.5 + 0.5);
 
 				//fixed3 diffuse = lerp(diffuse,_ShadowColor, mask.b);
-                fixed3 rampColor = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
+				fixed3 rampColor = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
 
 				fixed3 diffuse = lerp(rampColor,albedo,mask.b).rgb;
 
@@ -565,23 +555,163 @@
 				//return fixed4(i.originNormal,1);
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.originNormal, i.V), _FresnelPow);
 				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0), mask.r), _IndirectType);
-//_FresnelSmoothstep
+				
 				fresnel = lerp(0,fresnel,mask2.r);
 
- 				fresnel = smoothstep(_FresnelMin, _FresnelMax, fresnel);
-    			fresnel = smoothstep(0, _FresnelSmooth, fresnel);
+				fresnel = smoothstep(_FresnelMin, _FresnelMax, fresnel);
+				fresnel = smoothstep(0, _FresnelSmooth, fresnel);
 
 
 				finalColor *= _LightColor0;
-			 	finalColor *= 1 + UNITY_LIGHTMODEL_AMBIENT;
+				finalColor *= 1 + UNITY_LIGHTMODEL_AMBIENT;
 				
 				finalColor.a = c.a;
 				//return fixed4(lerp(1, _FresnelCol.rgb, fresnel)*_FresnelCol.a, 1);
+				//return 1;
 				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a+IndirectResult, 1);
-            }
-            ENDCG
-        }
+			}
+			ENDCG
+		}
 
+		Pass {
+			Name "Shadow"
+			
+			Tags {
+				"LightMode" = "ShadowCaster"
+			}
 
+			CGPROGRAM
+
+			#pragma target 3.0
+
+			#pragma shader_feature _ _RENDERING_CUTOUT _RENDERING_FADE _RENDERING_TRANSPARENT
+			#pragma shader_feature _SEMITRANSPARENT_SHADOWS
+			#pragma shader_feature _SMOOTHNESS_ALBEDO
+
+			#pragma multi_compile _ LOD_FADE_CROSSFADE
+
+			#pragma multi_compile_shadowcaster
+			#pragma multi_compile_instancing
+			#pragma instancing_options lodfade
+
+			#pragma vertex MyShadowVertexProgram
+			#pragma fragment MyShadowFragmentProgram
+
+			#include "UnityCG.cginc"
+
+			#if defined(_RENDERING_FADE) || defined(_RENDERING_TRANSPARENT)
+				#if defined(_SEMITRANSPARENT_SHADOWS)
+					#define SHADOWS_SEMITRANSPARENT 1
+				#else
+					#define _RENDERING_CUTOUT
+				#endif
+			#endif
+
+			#if SHADOWS_SEMITRANSPARENT || defined(_RENDERING_CUTOUT)
+				#if !defined(_SMOOTHNESS_ALBEDO)
+					#define SHADOWS_NEED_UV 1
+				#endif
+			#endif
+
+			UNITY_INSTANCING_BUFFER_START(InstanceProperties)
+				UNITY_DEFINE_INSTANCED_PROP(float4, _Color)
+			#define _Color_arr InstanceProperties
+			UNITY_INSTANCING_BUFFER_END(InstanceProperties)
+
+			sampler2D _MainTex;
+			float4 _MainTex_ST;
+			float _Cutoff;
+
+			sampler3D _DitherMaskLOD;
+
+			struct VertexData {
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+				float4 position : POSITION;
+				float3 normal : NORMAL;
+				float2 uv : TEXCOORD0;
+			};
+
+			struct InterpolatorsVertex {
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+				float4 position : SV_POSITION;
+				#if SHADOWS_NEED_UV
+					float2 uv : TEXCOORD0;
+				#endif
+				#if defined(SHADOWS_CUBE)
+					float3 lightVec : TEXCOORD1;
+				#endif
+			};
+
+			struct Interpolators {
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+				#if SHADOWS_SEMITRANSPARENT || defined(LOD_FADE_CROSSFADE)
+					UNITY_VPOS_TYPE vpos : VPOS;
+				#else
+					float4 positions : SV_POSITION;
+				#endif
+
+				#if SHADOWS_NEED_UV
+					float2 uv : TEXCOORD0;
+				#endif
+				#if defined(SHADOWS_CUBE)
+					float3 lightVec : TEXCOORD1;
+				#endif
+			};
+
+			float GetAlpha (Interpolators i) {
+				float alpha = UNITY_ACCESS_INSTANCED_PROP(_Color_arr, _Color).a;
+				#if SHADOWS_NEED_UV
+					alpha *= tex2D(_MainTex, i.uv.xy).a;
+				#endif
+				return alpha;
+			}
+
+			InterpolatorsVertex MyShadowVertexProgram (VertexData v) {
+				InterpolatorsVertex i;
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, i);
+				#if defined(SHADOWS_CUBE)
+					i.position = UnityObjectToClipPos(v.position);
+					i.lightVec =
+						mul(unity_ObjectToWorld, v.position).xyz - _LightPositionRange.xyz;
+				#else
+					i.position = UnityClipSpaceShadowCasterPos(v.position.xyz, v.normal);
+					i.position = UnityApplyLinearShadowBias(i.position);
+				#endif
+
+				#if SHADOWS_NEED_UV
+					i.uv = TRANSFORM_TEX(v.uv, _MainTex);
+				#endif
+				return i;
+			}
+
+			float4 MyShadowFragmentProgram (Interpolators i) : SV_TARGET {
+				UNITY_SETUP_INSTANCE_ID(i);
+				#if defined(LOD_FADE_CROSSFADE)
+					UnityApplyDitherCrossFade(i.vpos);
+				#endif
+
+				float alpha = GetAlpha(i);
+				#if defined(_RENDERING_CUTOUT)
+					clip(alpha - _Cutoff);
+				#endif
+
+				#if SHADOWS_SEMITRANSPARENT
+					float dither =
+						tex3D(_DitherMaskLOD, float3(i.vpos.xy * 0.25, alpha * 0.9375)).a;
+					clip(dither - 0.01);
+				#endif
+				
+				#if defined(SHADOWS_CUBE)
+					float depth = length(i.lightVec) + unity_LightShadowBias.x;
+					depth *= _LightPositionRange.w;
+					return UnityEncodeCubeShadowDepth(depth);
+				#else
+					return 0;
+				#endif
+			}
+
+			ENDCG
+		}
     }
 }
