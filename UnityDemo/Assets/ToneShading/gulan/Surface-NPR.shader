@@ -99,11 +99,11 @@ Shader "Custom/Surface/Surface-NPR"
 
 		[Space]
 		_AOColor ("AO Color", Color) = (0, 0, 0, 1)
-		_AOScale ("AO Scale", Range(0, 1.5)) = 1
+		_AOScale ("AO Scale", Range(0.0, 1.0)) = 1
 
 		[Space(50)]
 		[Header(Innerline)]
-		_InnerIntansity ("Shadow Scale", Range(0, 1)) = 0.5
+		_InnerIntansity ("Inner Edge Scale", Range(0, 1)) = 0.5
 
 		[Space(50)]
 		[Header(Outline)]
@@ -487,10 +487,9 @@ Shader "Custom/Surface/Surface-NPR"
 				float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
 				
 				fixed3 worldNormal = normalize(i.worldNormal);
-				fixed3 worldLightDir = normalize(_WorldSpaceLightPos0.xyz);
 				
 				fixed3 viewDir = normalize(_WorldSpaceCameraPos.xyz - i.worldPos.xyz);
-				fixed3 halfDir = normalize(worldLightDir + viewDir);
+				fixed3 halfDir = normalize(lightDir + viewDir);
 				
 				fixed4 c = tex2D(_MainTex, i.uv);
 				
@@ -504,8 +503,6 @@ Shader "Custom/Surface/Surface-NPR"
 				// fixed w = fwidth(spec) * 2.0;
 				// fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
 				
-				
-
 				//blinn 高光模型
 				fixed3 specular = _LightColor0.rgb * _SpecularColor.rgb * pow(max(0, dot(worldNormal, halfDir)), _SpecularScale);
 				//return fixed4(specular,1);
@@ -513,8 +510,8 @@ Shader "Custom/Surface/Surface-NPR"
 
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = albedo;
-				ambient *= mask.b * _AOScale * _AOColor;
-				
+				ambient = lerp(ambient * mask.b * (1-_AOScale) * _AOColor * normalize(dot(worldNormal , lightDir)), ambient, mask.b);// * _AOScale * _AOColor;
+				//return fixed4(ambient,1);
 				ambient *= getLerpShadow(lerpShadow,lightDir)*_LerpShadowIntansity;
 				//return mask.b;
 				//return getLerpShadow(lerpShadow,lightDir);
@@ -532,20 +529,23 @@ Shader "Custom/Surface/Surface-NPR"
 
 				
 				//漫反射系数
-				fixed diff =  dot(worldNormal, lightDir);
+
+				
+				fixed diff =  dot(lerp(i.normal,worldNormal,mask.r), lightDir);
 				diff = (diff * 0.5 + 0.5);
+				
 				//选择使用哪种diffuse ramp方式
 				fixed3 rampColor = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
-				fixed3 diffuse = lerp(rampColor,albedo,mask.b).rgb*_LightColor0.rgb;
+				fixed3 diffuse = rampColor;//lerp(rampColor,albedo,mask.b).rgb;
 				//叠加金属度,金属情况下,漫反射为0
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic), mask.r);
 				//return fixed4(diffuse,1);
- 				//diffuse*= mask.b * _AOScale * _AOColor;
+ 				
 
 				//合并 基础色 漫反射 高光色 alpha
 				fixed4 finalColor = fixed4(ambient * diffuse + specular, _Color.a);
 				//叠加阴影贴图和高光贴图
-				finalColor.rgb *= lerp(0+1-_InnerIntansity, 1, mask.a);
+				
 				//return finalColor;
 
 				//粗糙度
@@ -556,13 +556,18 @@ Shader "Custom/Surface/Surface-NPR"
 				//菲涅尔
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.worldNormal, i.V), _FresnelPow);
 				
+				
+
 				fresnel = lerp(0,fresnel,mask.r);
 				fresnel = smoothstep(_FresnelMin, _FresnelMax, fresnel);
 				fresnel = smoothstep(0, _FresnelSmooth, fresnel);
 				
+				//内描边
+				finalColor.rgb += IndirectResult;
+				finalColor.rgb *= lerp(1-_InnerIntansity, 1, mask.a);
 
 				//return 1;
-				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a+IndirectResult, finalColor.a);//+IndirectResult
+				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a, finalColor.a);//+IndirectResult
 			}
 			ENDCG
 		}
