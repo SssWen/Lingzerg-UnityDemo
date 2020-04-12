@@ -9,26 +9,22 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: NPR-gulan
   m_Shader: {fileID: 4800000, guid: e2418cff757d4a343822bcb6d5b36ac3, type: 3}
-  m_ShaderKeywords: _INDIRECTTYPE_ON _LIGHTDIRNORMALSWITCH_ON _RAMPSWITCH_ON
+  m_ShaderKeywords: _INDIRECTTYPE_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 3000
   stringTagMap: {}
   disabledShaderPasses: []
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _4Shadow:
-        m_Texture: {fileID: 2800000, guid: c763a1e7f75e9424ebce9551daa377c3, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _LUT:
         m_Texture: {fileID: 2800000, guid: 01243aba349ba664c8a8ea64c648a829, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LerpShadow:
-        m_Texture: {fileID: 2800000, guid: e4ba0f5509edd43cca73e27a02593d99, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -48,39 +44,38 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _BrightIntensity: 1.6
-    - _ColorIntensity: 1
-    - _DarkIntensity: 0.41
-    - _FresnelBase: 0.856
-    - _FresnelMax: 0.87
-    - _FresnelMin: 0.35
-    - _FresnelPow: 3.68
-    - _FresnelScale: 0.593
-    - _FresnelSmooth: 0.76
-    - _FresnelSmoothstep: 5
-    - _GrayIntensity: 1
+    - _BrightIntensity: 0.28
+    - _DarkIntensity: 0.2
+    - _FresnelBase: 1
+    - _FresnelMax: 0.7
+    - _FresnelMin: 0.5
+    - _FresnelPow: 5
+    - _FresnelScale: 0.532
+    - _FresnelSmooth: 1
+    - _GrayIntensity: 0.2
     - _IndirectType: 1
     - _InnerIntansity: 1
-    - _LightDirNormalSwitch: 1
-    - _LightIntansity: 0
-    - _Metallic: 0.189
+    - _LightDirNormalSwitch: 0
+    - _LightIntansity: 1
+    - _Metallic: 0.446
     - _OutlineColorIntensity: 1
     - _OutlineWidth: 0.4
-    - _RampIn: 0.56
-    - _RampSwitch: 1
-    - _ShadowScale: 0.99
-    - _Smoothness: 0
-    - _SpecularScale: 0.99
+    - _RampIn: 1
+    - _RampSwitch: 0
+    - _ShadowScale: 1
+    - _Smoothness: 0.488
+    - _Specular2DScale: 0.0048
+    - _SpecularScale: 43
     m_Colors:
     - _B: {r: 0, g: 0, b: 0, a: 1}
-    - _BrightColor: {r: 1, g: 0.83994734, b: 0.5235849, a: 1}
+    - _BrightColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DarkColor: {r: 0.26415092, g: 0.058561757, b: 0.058561757, a: 1}
-    - _FaceFront: {r: 1, g: 0, b: 0, a: 1}
+    - _DarkColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FaceFront: {r: 0, g: 0, b: 1, a: 1}
     - _FresnelCol: {r: 1, g: 1, b: 1, a: 1}
     - _G: {r: 0, g: 0, b: 0, a: 1}
-    - _GrayColor: {r: 0.6509434, g: 0.18729973, b: 0.18729973, a: 1}
-    - _OutlineColor: {r: 0.254717, g: 0, b: 0, a: 1}
-    - _R: {r: 0, g: 0, b: 1.2, a: 1}
-    - _ShadowColor: {r: 0.3773585, g: 0.2130282, b: 0.14773941, a: 1}
-    - _SpecularColor: {r: 0.5849056, g: 0.551323, b: 0.45523316, a: 1}
+    - _GrayColor: {r: 1, g: 1, b: 1, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _R: {r: 0, g: 0, b: 0, a: 1}
+    - _ShadowColor: {r: 0, g: 0, b: 0, a: 1}
+    - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}

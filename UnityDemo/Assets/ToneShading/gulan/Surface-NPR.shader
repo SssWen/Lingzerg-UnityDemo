@@ -1,4 +1,6 @@
-﻿Shader "Custom/Surface/Surface-NPR"
+﻿// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
+
+Shader "Custom/Surface/Surface-NPR"
 {
     Properties
     {
@@ -85,7 +87,9 @@
 		[Space(50)]
 		[Header(SpecularAndShadow)]
 		_SpecularColor ("Specular Color", Color) = (1, 1, 1, 1)
-		_SpecularScale ("Specular Scale", Range(0, 0.99)) = 1
+		//_SpecularScale ("Specular Scale", Range(8, 256)) = 1
+		_Specular2DScale ("Specular Scale", Range(0, 0.1)) = 0.01
+
 		[Space]
 		_ShadowColor ("Shadow Color", Color) = (0, 0, 0, 1)
 		_ShadowScale ("Shadow Scale", Range(0, 0.99)) = 1
@@ -135,6 +139,7 @@
         Tags { "RenderType"="Opaque" }
 
         LOD 100
+		
 /***
         //描边的Pass
 		Pass
@@ -258,7 +263,7 @@
 			}
 			ENDCG
 		}
-/****/
+
 		Pass
 		{
 			Name "NPR Shading"
@@ -290,7 +295,8 @@
 				fixed4 color : COLOR;
 				float2 uv : TEXCOORD0;
 				fixed3 normal : TEXCOORD1;
-				fixed3 originNormal : TEXCOORD2;
+				fixed3 worldNormal : TEXCOORD2;
+				
 				fixed3 V : TEXCOORD3;
 			//#if defined(BINORMAL_PER_FRAGMENT) //是否计算次法线
 			//	fixed4 tangent : TEXCOORD2;
@@ -320,7 +326,7 @@
 			fixed _InnerIntansity,_LightIntansity;
 
 			fixed4 _SpecularColor,_ShadowColor;
-			fixed _SpecularScale,_ShadowScale;
+			fixed _SpecularScale,_ShadowScale,_Specular2DScale;
 
 			fixed _Metallic, _Smoothness,_IndirectType;
 
@@ -336,30 +342,36 @@
 
 			fixed4 _R,_G,_B;
 
-			fixed3 getNormal(fixed3 pos, fixed3 normal,fixed3 color) {
-				normal = normalize(lerp(normal,(pos.xyz-_R.rgb)*-1, color.r));
-				normal = normalize(lerp(normal,(pos.xyz-_G.rgb)*-1, color.g));
-				normal = normalize(lerp(normal,(pos.xyz-_B.rgb)*-1, color.b));
+			// fixed3 getNormal(fixed3 pos, fixed3 normal,fixed3 color) {
+			// 	normal = normalize(lerp(normal,(pos.xyz-_R.rgb)*-1, color.r));
+			// 	normal = normalize(lerp(normal,(pos.xyz-_G.rgb)*-1, color.g));
+			// 	normal = normalize(lerp(normal,(pos.xyz-_B.rgb)*-1, color.b));
 
-				return normal;
-			}
+			// 	return normal;
+			// }
 
 			Interpolators MyVertexProgram (VertexData v)
 			{
 				Interpolators i = (Interpolators)0;
 				i.pos = UnityObjectToClipPos(v.vertex);
 
-				i.worldPos.xyz = normalize(mul(unity_ObjectToWorld, v.vertex));
+				// Transform the normal from object space to world space
+				i.worldNormal = mul(v.normal, (float3x3)unity_WorldToObject);
+				
+				// Transform the vertex from object spacet to world space
+				i.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
+
+				//i.worldPos.xyz = normalize(mul(unity_ObjectToWorld, v.vertex));
+				//i.worldNormal = normalize(UnityObjectToWorldNormal(v.normal));
+
 				i.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				i.color = v.color;
 				
-				//i.normal = UnityObjectToWorldNormal(v.normal);
-				//i.worldNormal  = UnityObjectToWorldNormal(v.normal);
-				i.normal = normalize(UnityObjectToWorldNormal(v.normal));
+				i.normal = mul(v.normal, (float3x3)unity_WorldToObject);
 				//i.normal = lerp(i.normal,getNormal(v.vertex.xyz, i.normal,i.color),_MappingNormalSwitch);
 
 				i.V = normalize(WorldSpaceViewDir(v.vertex));
-				i.originNormal = normalize(UnityObjectToWorldNormal(v.normal));
+				
 
 				i.normal = normalize(lerp(i.normal,_WorldSpaceLightPos0.xyz*_LightIntansity + i.normal,_LightDirNormalSwitch));
 			
@@ -392,6 +404,7 @@
 				return F0 + (max(float3(1.0 - roughness, 1.0 - roughness, 1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 			}
 
+			//根据阴影纹理标记的信息,选择使用哪个通道的阴影
 			fixed getLerpShadow(float4 lerpShadow,fixed3 lightDir) {
 
 				fixed3 lightDirProject = fixed3(lightDir.x,0,lightDir.z);
@@ -415,7 +428,6 @@
 
 
 				//return lerp(,lerp(1-lerpShadow.b, lerpShadow.a,crossValue*dotValue),dotValue);
-
 
 				//return 1-lerpShadow.b;
 			}
@@ -464,39 +476,45 @@
 
 			fixed4 MyFragmentProgram (Interpolators i) : SV_Target
 			{
-				//return fixed4(i.normal,1);
-				//return i.color;
-				//fixed4 albedo = tex2D(_MainTex, i.uv);
-				//InitializeFragmentNormal(i);
-				//fixed3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
-				//fixed3 diff = albedo * _LightColor0.rgb * saturate(dot(normalize(i.normal), normalize(_WorldSpaceLightPos0)));
+				//*** 准备数据 ***//
 				float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
-				float3 viewDir = normalize(_WorldSpaceCameraPos.xyz - i.worldPos.xyz);
-				float3 lightColor = _LightColor0.rgb;
-				float3 halfVector = normalize(lightDir + viewDir);  //半角向量, 光照方向,视角求和后,平分两者夹角的一个向量
-
-				//防止除0
-				float nl = max(saturate(dot(i.normal, lightDir)), 0.000001);   //法线点乘光照方向,拿到反射强度
-				float nv = max(saturate(dot(i.normal, viewDir)), 0.000001);    //法线点乘视线方向,拿到实现与平面的倾斜关系
-				float vh = max(saturate(dot(viewDir, halfVector)), 0.000001);  //视角点乘 - 半角向量,这个点乘值的结果越接近0,视角和光线的夹角越大(最大为0,180度)
-				float lh = max(saturate(dot(lightDir, halfVector)), 0.000001); //同上,只不过是从光照方向来求
-				float nh = max(saturate(dot(i.normal, halfVector)), 0.000001); 
-				//法线和半角向量的关系,如果结果=0, 则法线垂直于半角向量,什么鬼的几何意义
-				//假如半角向量和法线点乘等于1 则代表半角向量等于法向量
-
+				
+				fixed3 worldNormal = normalize(i.worldNormal);
+				fixed3 worldLightDir = normalize(_WorldSpaceLightPos0.xyz);
+				
+				fixed3 viewDir = normalize(_WorldSpaceCameraPos.xyz - i.worldPos.xyz);
+				fixed3 halfDir = normalize(worldLightDir + viewDir);
+				
 				fixed4 c = tex2D(_MainTex, i.uv);
 				
 				float4 mask = tex2D(_Mask, i.uv);
 				float4 mask2 = tex2D(_Mask2, i.uv);
 				float4 lerpShadow = tex2D(_LerpShadow,i.uv);
+
+				//*** 准备数据结束 ***//
+
+				fixed spec = dot(worldNormal, halfDir);
+				fixed w = fwidth(spec) * 2.0;
+				fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
+				specular *= mask.r;
+
+				//blinn 高光模型
+				//fixed3 specular = _LightColor0.rgb * _SpecularColor.rgb * pow(max(0, dot(worldNormal, halfDir)), _SpecularScale);
+				//return fixed4(specular,1);
 				
 
+				
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = albedo;
-				ambient *= mask.b;//*(1-nl)
-				ambient *= getLerpShadow(lerpShadow,lightDir);
+				ambient *= mask.b;
+				ambient *= 1-getLerpShadow(lerpShadow,lightDir);
+				
 				//return getLerpShadow(lerpShadow,lightDir);
 				//return fixed4(ambient,1);
+				
+				//防止除0
+				float vh = max(saturate(dot(viewDir, halfDir)), 0.000001);
+				float nv = max(saturate(dot(i.normal, viewDir)), 0.000001);    //法线点乘视线方向,拿到实现与平面的倾斜关系
 
 				//菲涅尔F
 				//unity_ColorSpaceDielectricSpec.rgb这玩意大概是float3(0.04, 0.04, 0.04)，就是个经验值
@@ -504,71 +522,38 @@
 				//float3 F = lerp(pow((1 - max(vh, 0)),5), 1, F0);//是hv不是nv
 				float3 F = F0 + (1 - F0) * exp2((-5.55473 * vh - 6.98316) * vh);
 
-				//漫反射
-				fixed diff =  dot(i.normal, lightDir);
+				//漫反射系数
+				fixed diff =  dot(worldNormal, lightDir);
 				diff = (diff * 0.5 + 0.5);
 
-				//fixed3 diffuse = lerp(diffuse,_ShadowColor, mask.b);
+				//选择使用哪种diffuse ramp方式
 				fixed3 rampColor = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
-
-				fixed3 diffuse = lerp(rampColor,albedo,mask.b).rgb;
-
-				//diffuse = lerp(diffuse, _ShadowColor,(1-mask.b)*_ShadowScale*(1-nl));
-				
+				fixed3 diffuse = lerp(rampColor,albedo,mask.b).rgb*_LightColor0.rgb;
+				//叠加金属度,金属情况下,漫反射为0
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic), mask.r);
-				
-				//计算阴影叠加
-				//return float4(diffuse,1);
+				//return fixed4(diffuse,1);
+
+
+				//合并 基础色 漫反射 高光色 alpha
+				fixed4 finalColor = fixed4(ambient * diffuse + specular, _Color.a);
+				//叠加阴影贴图和高光贴图
+				finalColor.rgb *= lerp(0+1-_InnerIntansity, 1, mask.a);
+				//return finalColor;
 
 				//粗糙度
 				float perceptualRoughness = 1 - _Smoothness;
 				float roughness = perceptualRoughness * perceptualRoughness;
-				//float squareRoughness = roughness * roughness;
-
-				//镜面反射部分
-				//D是法线分布函数或者叫正态分部函数，从统计学上估算微平面的取向 - 这里才是高光
-				float lerpSquareRoughness = pow(lerp(0.002, 1, roughness), 2);//Unity把roughness lerp到了0.002
-				float D = lerpSquareRoughness / (pow((pow(nh, 2) * (lerpSquareRoughness - 1) + 1), 2) * UNITY_PI);
-
-				////几何遮蔽G 说白了就是粗糙度
-				//float kInDirectLight = pow(squareRoughness + 1, 2) / 8;
-				//float kInIBL = pow(squareRoughness, 2) / 8;
-				//float GLeft = nl / lerp(nl, 1, kInDirectLight);
-				//float GRight = nv / lerp(nv, 1, kInDirectLight);
-				//float G = GLeft * GRight;
-
-				//高光部分
-				fixed spec = dot(i.normal, halfVector);
-				fixed w = fwidth(spec) * 2.0;// (D * G * F * 0.25) / (nv * nl);//
-				//* lerp(0, 1, mask.g) * _SpecularScale;
-				fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-D, D, D + _SpecularScale - 1)) * _SpecularScale* lerp(0, 1, mask.g)*nl;
-				//return fixed4(specular,1);
-
-				fixed4 finalColor = fixed4(ambient * diffuse + specular,1);
-
-				//叠加阴影贴图和高光贴图
-				//finalColor.rgb += shadowCol*0.5f*step(_SpecStep,ilmTexB*pow(nh,_Shininess*ilmTexR*128)) *shadowContrast ;
-				finalColor.rgb *= lerp(0+1-_InnerIntansity, 1, mask.a);
-				
-				/*** 菲涅尔 ***/
-				//float fresnel = _fresnelBase + _fresnelScale*pow(1 - dot(N, V), _fresnelIndensity);
-				//return fixed4(i.originNormal,1);
-				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.originNormal, i.V), _FresnelPow);
 				float3 IndirectResult = lerp(float3(0,0,0), lerp(float3(0,0,0),getIndirectLight(i, albedo,ambient,perceptualRoughness,roughness, nv, F0), mask.r), _IndirectType);
 				
+				//菲涅尔
+				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.worldNormal, i.V), _FresnelPow);
 				fresnel = lerp(0,fresnel,mask2.r);
 
 				fresnel = smoothstep(_FresnelMin, _FresnelMax, fresnel);
 				fresnel = smoothstep(0, _FresnelSmooth, fresnel);
 
-
-				finalColor *= _LightColor0;
-				finalColor *= 1 + UNITY_LIGHTMODEL_AMBIENT;
-				
-				finalColor.a = c.a;
-				//return fixed4(lerp(1, _FresnelCol.rgb, fresnel)*_FresnelCol.a, 1);
 				//return 1;
-				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a+IndirectResult, 1);
+				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a+IndirectResult, finalColor.a);//+IndirectResult
 			}
 			ENDCG
 		}
@@ -713,5 +698,6 @@
 
 			ENDCG
 		}
+/****/
     }
 }
