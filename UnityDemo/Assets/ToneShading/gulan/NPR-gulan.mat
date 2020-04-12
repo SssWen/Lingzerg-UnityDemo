@@ -32,7 +32,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Mask:
-        m_Texture: {fileID: 2800000, guid: ba390350f562b4792a64b8894dde2759, type: 3}
+        m_Texture: {fileID: 2800000, guid: 0a65a397a726e4415b9c28f7047dec25, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Mask2:
@@ -44,28 +44,28 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _BrightIntensity: 0.28
-    - _DarkIntensity: 0.2
+    - _BrightIntensity: 0.86
+    - _DarkIntensity: 0.457
     - _FresnelBase: 1
-    - _FresnelMax: 0.7
-    - _FresnelMin: 0.5
+    - _FresnelMax: 1.9
+    - _FresnelMin: 0.88
     - _FresnelPow: 5
-    - _FresnelScale: 0.532
+    - _FresnelScale: 0.72
     - _FresnelSmooth: 1
-    - _GrayIntensity: 0.2
+    - _GrayIntensity: 0.28
     - _IndirectType: 1
     - _InnerIntansity: 1
     - _LightDirNormalSwitch: 0
-    - _LightIntansity: 1
-    - _Metallic: 0.446
+    - _LightIntansity: 0
+    - _Metallic: 0.211
     - _OutlineColorIntensity: 1
-    - _OutlineWidth: 0.4
+    - _OutlineWidth: 0.5
     - _RampIn: 1
     - _RampSwitch: 0
     - _ShadowScale: 1
-    - _Smoothness: 0.488
-    - _Specular2DScale: 0.0048
-    - _SpecularScale: 43
+    - _Smoothness: 0.24
+    - _Specular2DScale: 0.1
+    - _SpecularScale: 29
     m_Colors:
     - _B: {r: 0, g: 0, b: 0, a: 1}
     - _BrightColor: {r: 1, g: 1, b: 1, a: 1}

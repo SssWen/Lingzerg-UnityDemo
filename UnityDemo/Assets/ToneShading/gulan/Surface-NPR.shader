@@ -36,7 +36,6 @@ Shader "Custom/Surface/Surface-NPR"
 		_Mask2("Mask2 Texture,r:菲涅尔", 2D) = "while" {}
         _LerpShadow("4 Shadow Texture", 2D) = "black" {}
 
-        
 		_FaceFront ("定义一个正面朝向,用于插值,只读取XZ", Vector) = (0, 0, 1, 1)
 
 		//[Space(50)]
@@ -87,8 +86,8 @@ Shader "Custom/Surface/Surface-NPR"
 		[Space(50)]
 		[Header(SpecularAndShadow)]
 		_SpecularColor ("Specular Color", Color) = (1, 1, 1, 1)
-		//_SpecularScale ("Specular Scale", Range(8, 256)) = 1
-		_Specular2DScale ("Specular Scale", Range(0, 0.1)) = 0.01
+		_SpecularScale ("Specular Scale", Range(8, 256)) = 1
+		//_Specular2DScale ("Specular Scale", Range(0, 0.1)) = 0.01
 
 		[Space]
 		_ShadowColor ("Shadow Color", Color) = (0, 0, 0, 1)
@@ -326,7 +325,7 @@ Shader "Custom/Surface/Surface-NPR"
 			fixed _InnerIntansity,_LightIntansity;
 
 			fixed4 _SpecularColor,_ShadowColor;
-			fixed _SpecularScale,_ShadowScale,_Specular2DScale;
+			fixed _SpecularScale,_ShadowScale;//_Specular2DScale
 
 			fixed _Metallic, _Smoothness,_IndirectType;
 
@@ -493,17 +492,16 @@ Shader "Custom/Surface/Surface-NPR"
 
 				//*** 准备数据结束 ***//
 
-				fixed spec = dot(worldNormal, halfDir);
-				fixed w = fwidth(spec) * 2.0;
-				fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
-				specular *= mask.r;
+				// fixed spec = dot(worldNormal, halfDir);
+				// fixed w = fwidth(spec) * 2.0;
+				// fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
+				
 
 				//blinn 高光模型
-				//fixed3 specular = _LightColor0.rgb * _SpecularColor.rgb * pow(max(0, dot(worldNormal, halfDir)), _SpecularScale);
+				fixed3 specular = _LightColor0.rgb * _SpecularColor.rgb * pow(max(0, dot(worldNormal, halfDir)), _SpecularScale);
 				//return fixed4(specular,1);
-				
+				specular *= mask.g;
 
-				
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = albedo;
 				ambient *= mask.b;
@@ -547,10 +545,11 @@ Shader "Custom/Surface/Surface-NPR"
 				
 				//菲涅尔
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.worldNormal, i.V), _FresnelPow);
-				fresnel = lerp(0,fresnel,mask2.r);
-
+				
+				fresnel = lerp(0,fresnel,mask.r);
 				fresnel = smoothstep(_FresnelMin, _FresnelMax, fresnel);
 				fresnel = smoothstep(0, _FresnelSmooth, fresnel);
+				
 
 				//return 1;
 				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a+IndirectResult, finalColor.a);//+IndirectResult
