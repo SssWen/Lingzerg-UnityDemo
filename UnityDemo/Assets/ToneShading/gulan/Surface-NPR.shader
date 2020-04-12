@@ -29,12 +29,19 @@ Shader "Custom/Surface/Surface-NPR"
         //ramp只对阴影部分有效
         //ao始终都在
 
+		// * 1：bug - 整体变暗
+		// 2：bloom
+		// 3：ao跟随漫反射衰减
+		// * 4：阴影贴图强度控制
+		// 5：角色接受阴影
+
 
 		[Header(Color)]
         _MainTex ("Main Texture", 2D) = "while" {}
 		_Mask("Mask Texture,r:金属度,b:阴影", 2D) = "while" {}
 		_Mask2("Mask2 Texture,r:菲涅尔", 2D) = "while" {}
         _LerpShadow("4 Shadow Texture", 2D) = "while" {}
+		_LerpShadowIntansity("4 Shadow Intansity", Float) = 1
 
 		_FaceFront ("定义一个正面朝向,用于插值,只读取XZ", Vector) = (0, 0, 1, 1)
 
@@ -89,9 +96,10 @@ Shader "Custom/Surface/Surface-NPR"
 		_SpecularScale ("Specular Scale", Range(8, 256)) = 1
 		//_Specular2DScale ("Specular Scale", Range(0, 0.1)) = 0.01
 
+
 		[Space]
-		_ShadowColor ("Shadow Color", Color) = (0, 0, 0, 1)
-		_ShadowScale ("Shadow Scale", Range(0, 0.99)) = 1
+		_AOColor ("AO Color", Color) = (0, 0, 0, 1)
+		_AOScale ("AO Scale", Range(0, 1.5)) = 1
 
 		[Space(50)]
 		[Header(Innerline)]
@@ -322,10 +330,10 @@ Shader "Custom/Surface/Surface-NPR"
 			sampler2D _Ramp;
 			fixed _RampIn;
 
-			fixed _InnerIntansity,_LightIntansity;
+			fixed _InnerIntansity,_LightIntansity,_LerpShadowIntansity;
 
-			fixed4 _SpecularColor,_ShadowColor;
-			fixed _SpecularScale,_ShadowScale;//_Specular2DScale
+			fixed4 _SpecularColor,_AOColor;
+			fixed _SpecularScale,_AOScale;//_Specular2DScale
 
 			fixed _Metallic, _Smoothness,_IndirectType;
 
@@ -496,6 +504,7 @@ Shader "Custom/Surface/Surface-NPR"
 				// fixed w = fwidth(spec) * 2.0;
 				// fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
 				
+				
 
 				//blinn 高光模型
 				fixed3 specular = _LightColor0.rgb * _SpecularColor.rgb * pow(max(0, dot(worldNormal, halfDir)), _SpecularScale);
@@ -504,9 +513,10 @@ Shader "Custom/Surface/Surface-NPR"
 
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = albedo;
-				ambient *= mask.b;
-				ambient *= getLerpShadow(lerpShadow,lightDir);
+				ambient *= mask.b * _AOScale * _AOColor;
 				
+				ambient *= getLerpShadow(lerpShadow,lightDir)*_LerpShadowIntansity;
+				//return mask.b;
 				//return getLerpShadow(lerpShadow,lightDir);
 				//return fixed4(ambient,1);
 				
@@ -520,17 +530,17 @@ Shader "Custom/Surface/Surface-NPR"
 				//float3 F = lerp(pow((1 - max(vh, 0)),5), 1, F0);//是hv不是nv
 				float3 F = F0 + (1 - F0) * exp2((-5.55473 * vh - 6.98316) * vh);
 
+				
 				//漫反射系数
 				fixed diff =  dot(worldNormal, lightDir);
 				diff = (diff * 0.5 + 0.5);
-
 				//选择使用哪种diffuse ramp方式
 				fixed3 rampColor = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
 				fixed3 diffuse = lerp(rampColor,albedo,mask.b).rgb*_LightColor0.rgb;
 				//叠加金属度,金属情况下,漫反射为0
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic), mask.r);
 				//return fixed4(diffuse,1);
-
+ 				//diffuse*= mask.b * _AOScale * _AOColor;
 
 				//合并 基础色 漫反射 高光色 alpha
 				fixed4 finalColor = fixed4(ambient * diffuse + specular, _Color.a);
