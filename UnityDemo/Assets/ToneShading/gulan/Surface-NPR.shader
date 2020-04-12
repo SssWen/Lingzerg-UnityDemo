@@ -34,7 +34,7 @@ Shader "Custom/Surface/Surface-NPR"
         _MainTex ("Main Texture", 2D) = "while" {}
 		_Mask("Mask Texture,r:金属度,b:阴影", 2D) = "while" {}
 		_Mask2("Mask2 Texture,r:菲涅尔", 2D) = "while" {}
-        _LerpShadow("4 Shadow Texture", 2D) = "black" {}
+        _LerpShadow("4 Shadow Texture", 2D) = "while" {}
 
 		_FaceFront ("定义一个正面朝向,用于插值,只读取XZ", Vector) = (0, 0, 1, 1)
 
@@ -505,7 +505,7 @@ Shader "Custom/Surface/Surface-NPR"
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = albedo;
 				ambient *= mask.b;
-				ambient *= 1-getLerpShadow(lerpShadow,lightDir);
+				ambient *= getLerpShadow(lerpShadow,lightDir);
 				
 				//return getLerpShadow(lerpShadow,lightDir);
 				//return fixed4(ambient,1);
