@@ -38,8 +38,9 @@ Shader "Custom/Surface/Surface-NPR"
 
 		[Header(Color)]
         _MainTex ("Main Texture", 2D) = "while" {}
-		_Mask("Mask Texture,r:金属度,b:阴影", 2D) = "while" {}
+		_Mask("Mask Texture,r:金属度,g:高光,b:阴影", 2D) = "while" {}
 		_Mask2("Mask2 Texture,r:菲涅尔", 2D) = "while" {}
+		_EmissionTex("Emission纹理", 2D) = "black" {}
         _LerpShadow("4 Shadow Texture", 2D) = "while" {}
 		_LerpShadowIntansity("4 Shadow Intansity", Float) = 1
 
@@ -94,7 +95,7 @@ Shader "Custom/Surface/Surface-NPR"
 		[Header(SpecularAndShadow)]
 		_SpecularColor ("Specular Color", Color) = (1, 1, 1, 1)
 		_SpecularScale ("Specular Scale", Range(8, 256)) = 1
-		//_Specular2DScale ("Specular Scale", Range(0, 0.1)) = 0.01
+		_Specular2DScale ("Specular2D Scale", Range(0, 0.1)) = 0.01
 
 
 		[Space]
@@ -133,6 +134,26 @@ Shader "Custom/Surface/Surface-NPR"
 		[Space(50)]
 		[Header(Mask)]
 		_LUT("LUT", 2D) = "white" {}
+
+		[Space(50)]
+		[Header(Outline)]
+		//Outline
+        [KeywordEnum(NML,POS)] _OUTLINE("OUTLINE MODE", Float) = 0
+        _Outline_Width ("Outline_Width", Float ) = 0
+        _Farthest_Distance ("Farthest_Distance", Float ) = 100
+        _Nearest_Distance ("Nearest_Distance", Float ) = 0.5
+        _Outline_Sampler ("Outline_Sampler", 2D) = "white" {}
+        _Outline_Color ("Outline_Color", Color) = (0.5,0.5,0.5,1)
+        [Toggle(_)] _Is_BlendBaseColor ("Is_BlendBaseColor", Float ) = 0
+        [Toggle(_)] _Is_LightColor_Outline ("Is_LightColor_Outline", Float ) = 1
+        //v.2.0.4
+        [Toggle(_)] _Is_OutlineTex ("Is_OutlineTex", Float ) = 0
+        _OutlineTex ("OutlineTex", 2D) = "white" {}
+        //Offset parameter
+        _Offset_Z ("Offset_Camera_Z", Float) = 0
+        //v.2.0.4.3 Baked Nrmal Texture for Outline
+        [Toggle(_)] _Is_BakedNormal ("Is_BakedNormal", Float ) = 0
+        _BakedNormal ("Baked Normal for Outline", 2D) = "white" {}
     }
 
 	CGINCLUDE
@@ -217,6 +238,7 @@ Shader "Custom/Surface/Surface-NPR"
 			ENDCG
 		}
 ***/
+/***
 
 		Pass
 		{
@@ -270,6 +292,30 @@ Shader "Custom/Surface/Surface-NPR"
 			}
 			ENDCG
 		}
+***/
+
+		Pass {
+            Name "Outline"
+            Tags {
+            }
+            Cull Front
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "UnityCG.cginc"
+            //#pragma fragmentoption ARB_precision_hint_fastest
+            //#pragma multi_compile_shadowcaster
+            //#pragma multi_compile_fog
+            #pragma only_renderers d3d9 d3d11 glcore gles gles3 metal vulkan xboxone ps4 switch
+            #pragma target 3.0
+            //V.2.0.4
+            #pragma multi_compile _IS_OUTLINE_CLIPPING_NO 
+            #pragma multi_compile _OUTLINE_NML _OUTLINE_POS
+            
+            #include "UCTS_Outline.cginc"
+            ENDCG
+        }
 
 		Pass
 		{
@@ -319,6 +365,7 @@ Shader "Custom/Surface/Surface-NPR"
 
 
 			sampler2D _Mask,_Mask2,_LerpShadow;
+			sampler2D _EmissionTex;
 			sampler2D _LUT;
 			fixed4 _FaceFront;
 
@@ -333,7 +380,7 @@ Shader "Custom/Surface/Surface-NPR"
 			fixed _InnerIntansity,_LightIntansity,_LerpShadowIntansity;
 
 			fixed4 _SpecularColor,_AOColor;
-			fixed _SpecularScale,_AOScale;//_Specular2DScale
+			fixed _SpecularScale,_AOScale,_Specular2DScale;
 
 			fixed _Metallic, _Smoothness,_IndirectType;
 
@@ -490,30 +537,43 @@ Shader "Custom/Surface/Surface-NPR"
 				
 				fixed3 viewDir = normalize(_WorldSpaceCameraPos.xyz - i.worldPos.xyz);
 				fixed3 halfDir = normalize(lightDir + viewDir);
-				
+				fixed wh = dot(worldNormal, halfDir);
+
+
 				fixed4 c = tex2D(_MainTex, i.uv);
 				
 				float4 mask = tex2D(_Mask, i.uv);
 				float4 mask2 = tex2D(_Mask2, i.uv);
+				float4 emissionColor = tex2D(_EmissionTex, i.uv);
+				
 				float4 lerpShadow = tex2D(_LerpShadow,i.uv);
 
 				//*** 准备数据结束 ***//
 
-				// fixed spec = dot(worldNormal, halfDir);
-				// fixed w = fwidth(spec) * 2.0;
-				// fixed3 specular = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
+				fixed spec = dot(worldNormal, halfDir);
+				fixed w = fwidth(spec) * 2.0;
+				fixed3 specular2 = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
 				
 				//blinn 高光模型
 				fixed3 specular = _LightColor0.rgb * _SpecularColor.rgb * pow(max(0, dot(worldNormal, halfDir)), _SpecularScale);
 				//return fixed4(specular,1);
 				specular *= mask.g;
-
+				specular2 *= mask.g;
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = albedo;
-				ambient = lerp(ambient * mask.b * (1-_AOScale) * _AOColor * normalize(dot(worldNormal , lightDir)), ambient, mask.b);// * _AOScale * _AOColor;
+
+				// if(mask.b < 0.9) {
+				// 	mask.b += step(0.5, wh);
+				// }
+				mask.b = 1-mask.b;
+				
+				mask.b *= 1-wh;
+//return mask.b;
+				ambient = lerp(ambient,ambient * mask.b * (1-_AOScale) * _AOColor * normalize(wh), mask.b);// * _AOScale * _AOColor;
 				//return fixed4(ambient,1);
 				ambient *= getLerpShadow(lerpShadow,lightDir)*_LerpShadowIntansity;
-				//return mask.b;
+				//ambient *= dot(worldNormal, halfDir);
+				
 				//return getLerpShadow(lerpShadow,lightDir);
 				//return fixed4(ambient,1);
 				
@@ -543,7 +603,7 @@ Shader "Custom/Surface/Surface-NPR"
  				
 
 				//合并 基础色 漫反射 高光色 alpha
-				fixed4 finalColor = fixed4(ambient * diffuse + specular, _Color.a);
+				fixed4 finalColor = fixed4(ambient * diffuse + specular+specular2, _Color.a);
 				//叠加阴影贴图和高光贴图
 				
 				//return finalColor;
@@ -556,8 +616,6 @@ Shader "Custom/Surface/Surface-NPR"
 				//菲涅尔
 				fixed fresnel = _FresnelBase + _FresnelScale * pow(1 - dot(i.worldNormal, i.V), _FresnelPow);
 				
-				
-
 				fresnel = lerp(0,fresnel,mask.r);
 				fresnel = smoothstep(_FresnelMin, _FresnelMax, fresnel);
 				fresnel = smoothstep(0, _FresnelSmooth, fresnel);
@@ -565,7 +623,7 @@ Shader "Custom/Surface/Surface-NPR"
 				//内描边
 				finalColor.rgb += IndirectResult;
 				finalColor.rgb *= lerp(1-_InnerIntansity, 1, mask.a);
-
+				finalColor.rgb+= emissionColor;
 				//return 1;
 				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a, finalColor.a);//+IndirectResult
 			}
@@ -712,6 +770,6 @@ Shader "Custom/Surface/Surface-NPR"
 
 			ENDCG
 		}
-/****/
+
     }
 }
