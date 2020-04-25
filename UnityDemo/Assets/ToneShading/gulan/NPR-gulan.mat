@@ -61,15 +61,24 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _AOScale: 1
+    - _BlackFresnelBase2: 1
+    - _BlackFresnelPow2: 5
+    - _BlackFresnelScale2: 1
     - _BrightIntensity: 0.86
     - _DarkIntensity: 0.457
     - _Farthest_Distance: 1000
-    - _FresnelBase: 1
-    - _FresnelMax: 1.9
-    - _FresnelMin: 0.88
+    - _FresnelBase: 0.958
+    - _FresnelBase2: 1
+    - _FresnelBlackBase2: 1
+    - _FresnelBlackPow2: 5
+    - _FresnelBlackScale2: 1
+    - _FresnelMax: 1.187
+    - _FresnelMin: 1.009
     - _FresnelPow: 5
-    - _FresnelScale: 0.72
-    - _FresnelSmooth: 1
+    - _FresnelPow2: 5
+    - _FresnelScale: 0.5
+    - _FresnelScale2: 1
+    - _FresnelSmooth: 1.294
     - _GrayIntensity: 0.2
     - _IndirectType: 1
     - _InnerIntansity: 0.991
@@ -96,11 +105,14 @@ Material:
     m_Colors:
     - _AOColor: {r: 1, g: 1, b: 1, a: 1}
     - _B: {r: 0, g: 0, b: 0, a: 1}
+    - _BlackFresnelCol2: {r: 1, g: 1, b: 1, a: 1}
     - _BrightColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DarkColor: {r: 0.21698111, g: 0.16682982, b: 0.16682982, a: 1}
     - _FaceFront: {r: 0, g: 0, b: 1, a: 1}
+    - _FresnelBlackCol2: {r: 1, g: 1, b: 1, a: 1}
     - _FresnelCol: {r: 1, g: 1, b: 1, a: 1}
+    - _FresnelCol2: {r: 1, g: 1, b: 1, a: 1}
     - _G: {r: 0, g: 0, b: 0, a: 1}
     - _GrayColor: {r: 0.6415094, g: 0.5355998, b: 0.5355998, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}

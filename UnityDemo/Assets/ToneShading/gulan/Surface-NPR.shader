@@ -121,7 +121,7 @@ Shader "Custom/Surface/Surface-NPR"
 		
 		/** Special - 特殊功能 - Finil **/
 		[Space(50)]
-		[Header(FresnelMetallic)]
+		[Header(Fresnel Smooth)]
 		_FresnelCol("Fresnel Color", Color) = (1,1,1,1)
 		_FresnelBase("Fresnel Base", Range(0.0, 1.0)) = 1.0
 		_FresnelScale("Fresnel Scale", Range(0.0, 1.0)) = 1.0
@@ -130,6 +130,16 @@ Shader "Custom/Surface/Surface-NPR"
 		_FresnelMin("Fresnel Smoothstep Min", Range(0, 2)) = 1.0 //菲涅尔最小值
 		_FresnelMax("Fresnel Smoothstep Max", Range(0, 2)) = 1.0 //菲涅尔最大值
 		_FresnelSmooth("Fresnel Smooth", Range(0, 2)) = 1.0 //菲涅尔最大值
+
+		/** Special - 特殊功能 - balck Finil 2  **/
+		[Space(50)]
+		[Header(Fresnel Black)]
+		_FresnelBlackCol("Fresnel Black Color", Color) = (0,0,0,1)
+		_FresnelBlackBase("Fresnel Black Base", Range(0.0, 1.0)) = 0.0
+		_FresnelBlackScale("Fresnel Black Scale", Range(0.0, 1.0)) = 1.0
+		_FresnelBlackPow("Fresnel Black Pow", Range(0, 5)) = 5.0 //幂数
+
+
 
 		[Space(50)]
 		[Header(Mask)]
@@ -394,6 +404,12 @@ Shader "Custom/Surface/Surface-NPR"
 			fixed _FresnelMax;
 			fixed _FresnelSmooth;
 
+			//菲涅尔黑色过度
+			fixed4 _FresnelBlackCol;
+			fixed _FresnelBlackBase;
+			fixed _FresnelBlackScale;
+			fixed _FresnelBlackPow;
+
 			fixed4 _R,_G,_B;
 
 			// fixed3 getNormal(fixed3 pos, fixed3 normal,fixed3 color) {
@@ -550,9 +566,9 @@ Shader "Custom/Surface/Surface-NPR"
 
 				//*** 准备数据结束 ***//
 
-				fixed spec = dot(worldNormal, halfDir);
-				fixed w = fwidth(spec) * 2.0;
-				fixed3 specular2 = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, spec + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
+				//fixed spec = dot(worldNormal, halfDir);
+				fixed w = fwidth(wh) * 2.0;
+				fixed3 specular2 = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, wh + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
 				
 				//blinn 高光模型
 				fixed3 specular = _LightColor0.rgb * _SpecularColor.rgb * pow(max(0, dot(worldNormal, halfDir)), _SpecularScale);
@@ -620,12 +636,20 @@ Shader "Custom/Surface/Surface-NPR"
 				fresnel = smoothstep(_FresnelMin, _FresnelMax, fresnel);
 				fresnel = smoothstep(0, _FresnelSmooth, fresnel);
 				
+				//菲涅尔
+				fixed fresnelblack = _FresnelBlackBase + _FresnelBlackScale * pow(1 - dot(i.worldNormal, i.V), _FresnelBlackPow);
+
 				//内描边
 				finalColor.rgb += IndirectResult;
 				finalColor.rgb *= lerp(1-_InnerIntansity, 1, mask.a);
 				finalColor.rgb+= emissionColor;
+
+				finalColor.rgb =  lerp(finalColor, _FresnelBlackCol.rgb, fresnelblack);
+				finalColor.rgb =  lerp(finalColor, _FresnelCol.rgb, fresnel);
+				
+
 				//return 1;
-				return fixed4(lerp(finalColor, _FresnelCol.rgb, fresnel)*_FresnelCol.a, finalColor.a);//+IndirectResult
+				return fixed4(finalColor.rgb*_FresnelCol.a, finalColor.a);//+IndirectResult
 			}
 			ENDCG
 		}
