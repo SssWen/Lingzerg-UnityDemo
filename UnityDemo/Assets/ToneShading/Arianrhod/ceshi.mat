@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: body01
+  m_Name: ceshi
   m_Shader: {fileID: 4800000, guid: e2418cff757d4a343822bcb6d5b36ac3, type: 3}
   m_ShaderKeywords: _LIGHTDIRNORMALSWITCH_ON _OUTLINE_POS _RAMPSWITCH_ON
   m_LightmapFlags: 4
@@ -48,19 +48,19 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LUT:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 01243aba349ba664c8a8ea64c648a829, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LerpShadow:
-        m_Texture: {fileID: 2800000, guid: 2ec0b3fefc938164581d3ea960485f12, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 43b611ca978431742bd31320abe7ba7b, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Mask:
-        m_Texture: {fileID: 2800000, guid: f5b5f495fd2c06b429a2aff9e9c1c6f4, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Mask2:

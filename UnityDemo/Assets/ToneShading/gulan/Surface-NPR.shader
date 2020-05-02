@@ -94,11 +94,21 @@ Shader "Custom/Surface/Surface-NPR"
 		[Space(50)]
 		[Header(SpecularAndShadow)]
 		_SpecularColor ("Specular Color", Color) = (1, 1, 1, 1)
-		_SpecularScale ("Specular Scale", Range(8, 256)) = 1
+		_SpecularScale ("Specular Scale", Range(1, 256)) = 1
 		_Specular2DScale ("Specular2D Scale", Range(0, 0.1)) = 0.01
 
 
-		[Space]
+		[Space(50)]
+		[Header(SpecularPress)]
+		_Alpha ("spec move X", Range(-1, 1)) = 1
+		_Beta ("spec move Y", Range(-1, 1)) = 1
+		_SigmaX ("spec scale X", Range(0, 1)) = 1
+		_SigmaY ("spec scale Y", Range(0, 1)) = 1
+		_GammaX  ("spec split X", Range(0, 1)) = 1
+		_GammaY  ("spec split Y", Range(0, 1)) = 1
+
+		[Space(50)]
+		[Header(AO)]
 		_AOColor ("AO Color", Color) = (0, 0, 0, 1)
 		_AOScale ("AO Scale", Range(0.0, 1.0)) = 1
 
@@ -346,8 +356,7 @@ Shader "Custom/Surface/Surface-NPR"
 			{
 				float4 vertex : POSITION;
 				fixed3 normal : NORMAL;
-				
-				//fixed4 tangent : TANGENT;
+				fixed4 tangent : TANGENT;
 				fixed4 color : COLOR;
 				float2 uv : TEXCOORD0;
 			};
@@ -361,13 +370,10 @@ Shader "Custom/Surface/Surface-NPR"
 				fixed3 worldNormal : TEXCOORD2;
 				
 				fixed3 V : TEXCOORD3;
-			//#if defined(BINORMAL_PER_FRAGMENT) //是否计算次法线
-			//	fixed4 tangent : TEXCOORD2;
-			//#else 
-			//	fixed3 tangent : TEXCOORD2;
-			//	fixed3 binormal : TEXCOORD3;
-			//#endif
-				fixed3 worldPos : TEXCOORD4;
+				float3 tangent : TEXCOORD4;
+				float3 binormal : TEXCOORD5;
+			
+				fixed3 worldPos : TEXCOORD6;
 			};
 
 			sampler2D _MainTex;
@@ -412,6 +418,8 @@ Shader "Custom/Surface/Surface-NPR"
 
 			fixed4 _R,_G,_B;
 
+			fixed _Alpha,_Beta,_SigmaX,_SigmaY,_GammaX,_GammaY;
+
 			// fixed3 getNormal(fixed3 pos, fixed3 normal,fixed3 color) {
 			// 	normal = normalize(lerp(normal,(pos.xyz-_R.rgb)*-1, color.r));
 			// 	normal = normalize(lerp(normal,(pos.xyz-_G.rgb)*-1, color.g));
@@ -419,6 +427,11 @@ Shader "Custom/Surface/Surface-NPR"
 
 			// 	return normal;
 			// }
+
+			float3 CreateBinormal (float3 normal, float3 tangent, float binormalSign) {
+				return cross(normal, tangent.xyz) *
+					(binormalSign * unity_WorldTransformParams.w);
+			}
 
 			Interpolators MyVertexProgram (VertexData v)
 			{
@@ -442,6 +455,8 @@ Shader "Custom/Surface/Surface-NPR"
 
 				i.V = normalize(WorldSpaceViewDir(v.vertex));
 				
+				i.tangent = UnityObjectToWorldDir(v.tangent.xyz);
+				i.binormal = CreateBinormal(i.normal, i.tangent, v.tangent.w);
 
 				i.normal = normalize(lerp(i.normal,_WorldSpaceLightPos0.xyz*_LightIntansity + i.normal,_LightDirNormalSwitch));
 			
@@ -546,6 +561,9 @@ Shader "Custom/Surface/Surface-NPR"
 
 			fixed4 MyFragmentProgram (Interpolators i) : SV_Target
 			{
+				
+				//return fixed4(i.binormal,1);
+
 				//*** 准备数据 ***//
 				float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
 				
@@ -554,7 +572,7 @@ Shader "Custom/Surface/Surface-NPR"
 				fixed3 viewDir = normalize(_WorldSpaceCameraPos.xyz - i.worldPos.xyz);
 				fixed3 halfDir = normalize(lightDir + viewDir);
 				fixed wh = dot(worldNormal, halfDir);
-
+				
 
 				fixed4 c = tex2D(_MainTex, i.uv);
 				
@@ -566,15 +584,36 @@ Shader "Custom/Surface/Surface-NPR"
 
 				//*** 准备数据结束 ***//
 
-				//fixed spec = dot(worldNormal, halfDir);
-				fixed w = fwidth(wh) * 2.0;
-				fixed3 specular2 = _SpecularColor.rgb * lerp(0, 1, smoothstep(-w, w, wh + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
 				
+				//移动高光
+				fixed3 pressHalfView =	normalize(halfDir + _Alpha*i.tangent+_Beta*i.binormal);
+
+				//挤压高光
+				pressHalfView = normalize(pressHalfView - _SigmaX*dot(pressHalfView,i.tangent)*i.tangent);
+				pressHalfView = normalize(pressHalfView - _SigmaY*dot(pressHalfView,i.binormal)*i.binormal);
+
+				//_GammaX,_GammaY 切割高光
+				pressHalfView = normalize(pressHalfView - _GammaX*sign(dot(pressHalfView,i.tangent))*i.tangent - _GammaY*sign(dot(pressHalfView,i.binormal))*i.binormal);
+
+				fixed specWH = dot(worldNormal, normalize(pressHalfView));
+				
+				fixed specWHStep = fwidth(specWH) * 2.0f;
+
+				//preesWH = normalize(w = );
+
+				fixed3 specular2 = _SpecularColor.rgb * lerp(0, 1, smoothstep(-specWHStep, specWHStep, specWH + _Specular2DScale - 1)) * step(0.0001, _Specular2DScale);
+				
+				//_Alpha,_Beta;
+
+
 				//blinn 高光模型
 				fixed3 specular = _LightColor0.rgb * _SpecularColor.rgb * pow(max(0, dot(worldNormal, halfDir)), _SpecularScale);
 				//return fixed4(specular,1);
 				specular *= mask.g;
 				specular2 *= mask.g;
+
+				fixed3 finalSpecular = specular+specular2;
+
 				fixed3 albedo = c.rgb * _Color.rgb;
 				fixed3 ambient = albedo;
 
@@ -619,7 +658,7 @@ Shader "Custom/Surface/Surface-NPR"
  				
 
 				//合并 基础色 漫反射 高光色 alpha
-				fixed4 finalColor = fixed4(ambient * diffuse + specular+specular2, _Color.a);
+				fixed4 finalColor = fixed4(ambient * diffuse + finalSpecular, _Color.a);
 				//叠加阴影贴图和高光贴图
 				
 				//return finalColor;
@@ -649,7 +688,7 @@ Shader "Custom/Surface/Surface-NPR"
 				
 
 				//return 1;
-				return fixed4(finalColor.rgb*_FresnelCol.a, finalColor.a);//+IndirectResult
+				return fixed4(finalColor.rgb*_FresnelCol.a, finalColor.a);
 			}
 			ENDCG
 		}
