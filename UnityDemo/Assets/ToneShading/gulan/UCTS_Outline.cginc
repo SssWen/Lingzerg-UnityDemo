@@ -94,6 +94,9 @@
                 o.pos.z = o.pos.z + _Offset_Z * _ClipCameraPos.z;
                 return o;
             }
+
+
+            
             float4 frag(VertexOutput i) : SV_Target{
                 //v.2.0.5
                 _Color = _BaseColor;
@@ -110,7 +113,7 @@
                 float3 _Is_BlendBaseColor_var = lerp( _Outline_Color.rgb*lightColor, (_Outline_Color.rgb*Set_BaseColor*Set_BaseColor*lightColor), _Is_BlendBaseColor );
                 //
                 float3 _OutlineTex_var = tex2D(_OutlineTex,TRANSFORM_TEX(Set_UV0, _OutlineTex));
-//v.2.0.7.5
+//v.2.0.7.5     
 #ifdef _IS_OUTLINE_CLIPPING_NO
                 float3 Set_Outline_Color = lerp(_Is_BlendBaseColor_var, _OutlineTex_var.rgb*_Outline_Color.rgb*lightColor, _Is_OutlineTex );
                 return float4(Set_Outline_Color,1.0);

@@ -92,13 +92,24 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _1st_ShadeColor_Feather: 0.0001
+    - _1st_ShadeColor_Step: 0.5
+    - _1st_ShadeIntansty: 0.5
+    - _2nd_ShadeColor_Feather: 0.0001
+    - _2nd_ShadeColor_Step: 0
+    - _2st_ShadeColor_Feather: 0.0001
+    - _2st_ShadeColor_Step: 0
+    - _2st_ShadeIntansty: 0.5
     - _AOScale: 1
+    - _Alpha: 1
+    - _Beta: 1
     - _BrightIntensity: 2
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DarkIntensity: 0.715
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _EmissionIntansty: 1
     - _Farthest_Distance: 100
     - _FresnelBase: 1
     - _FresnelBlackBase: 0
@@ -112,6 +123,10 @@ Material:
     - _FresnelPow: 1.79
     - _FresnelScale: 1
     - _FresnelSmooth: 0
+    - _Gamma1: 1
+    - _Gamma2: 1
+    - _GammaX: 1
+    - _GammaY: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
@@ -137,6 +152,10 @@ Material:
     - _Parallax: 0.02
     - _RampIn: 0.448
     - _RampSwitch: 1
+    - _Sgn: 1
+    - _Sigma: 1
+    - _SigmaX: 1
+    - _SigmaY: 1
     - _Smoothness: 1
     - _SmoothnessTextureChannel: 0
     - _Specular2DScale: 0
@@ -146,6 +165,10 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
+    - _1nd_ShadeColor: {r: 0, g: 1, b: 0, a: 1}
+    - _1st_ShadeColor: {r: 0, g: 1, b: 0.028357267, a: 1}
+    - _2nd_ShadeColor: {r: 1, g: 0, b: 0, a: 1}
+    - _2st_ShadeColor: {r: 1, g: 0, b: 0, a: 1}
     - _AOColor: {r: 1, g: 1, b: 1, a: 1}
     - _B: {r: 0, g: 0, b: 0, a: 1}
     - _BrightColor: {r: 1, g: 1, b: 1, a: 1}

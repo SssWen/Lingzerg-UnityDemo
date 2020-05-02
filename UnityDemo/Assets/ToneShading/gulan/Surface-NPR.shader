@@ -41,6 +41,7 @@ Shader "Custom/Surface/Surface-NPR"
 		_Mask("Mask Texture,r:金属度,g:高光,b:阴影", 2D) = "while" {}
 		_Mask2("Mask2 Texture,r:菲涅尔", 2D) = "while" {}
 		_EmissionTex("Emission纹理", 2D) = "black" {}
+		_EmissionIntansty("Emission Intansty",Float) = 1
         _LerpShadow("4 Shadow Texture", 2D) = "while" {}
 		_LerpShadowIntansity("4 Shadow Intansity", Float) = 1
 
@@ -63,6 +64,20 @@ Shader "Custom/Surface/Surface-NPR"
 		[Header(RampSwitch)]
 		[Toggle]
 		_RampSwitch("Color Ramp Type",Float) = 0
+
+
+		[Space(50)]
+		[Header(ShadowFeather)]
+		
+		_1st_ShadeColor_Step ("1st ShadeColor Step", Range(0, 1)) = 0.5
+		_1st_ShadeIntansty ("1st Shade Intansty", Range(0, 1)) = 0.5
+		_1st_ShadeColor_Feather ("1st_ShadeColor_Feather", Range(0.0001, 1)) = 0.0001
+		_1st_ShadeColor ("1nd ShadeColor", Color) = (0,1,0,1)
+
+        _2st_ShadeColor_Step ("2nd_ShadeColor_Step", Range(0, 1)) = 0
+		_2st_ShadeIntansty ("2st Shade Intansty", Range(0, 1)) = 0.4
+        _2st_ShadeColor_Feather ("2nd_ShadeColor_Feather", Range(0.0001, 1)) = 0.0001
+		_2st_ShadeColor ("2nd ShadeColor", Color) = (1,0,0,1)
 
 		[Space(50)]
 		[Header(ColorRamp)]
@@ -352,6 +367,9 @@ Shader "Custom/Surface/Surface-NPR"
 			#include "UnityCG.cginc"
 			#include "UnityPBSLighting.cginc"
 
+            #include "AutoLight.cginc"
+            #include "Lighting.cginc"
+
 			struct VertexData
 			{
 				float4 vertex : POSITION;
@@ -419,6 +437,11 @@ Shader "Custom/Surface/Surface-NPR"
 			fixed4 _R,_G,_B;
 
 			fixed _Alpha,_Beta,_SigmaX,_SigmaY,_GammaX,_GammaY;
+			half _EmissionIntansty;
+
+			fixed4 _1st_ShadeColor,_2st_ShadeColor;
+			half _1st_ShadeColor_Step,_1st_ShadeColor_Feather,_2st_ShadeColor_Step,_2st_ShadeColor_Feather;
+			half _1st_ShadeIntansty,_2st_ShadeIntansty;
 
 			// fixed3 getNormal(fixed3 pos, fixed3 normal,fixed3 color) {
 			// 	normal = normalize(lerp(normal,(pos.xyz-_R.rgb)*-1, color.r));
@@ -623,10 +646,17 @@ Shader "Custom/Surface/Surface-NPR"
 				mask.b = 1-mask.b;
 				
 				mask.b *= 1-wh;
+
+
+
+
 //return mask.b;
 				ambient = lerp(ambient,ambient * mask.b * (1-_AOScale) * _AOColor * normalize(wh), mask.b);// * _AOScale * _AOColor;
-				//return fixed4(ambient,1);
+				
+				//return _HalfLambert_var;
+				//return fixed4(ambient*_HalfLambert_var,1);
 				ambient *= getLerpShadow(lerpShadow,lightDir)*_LerpShadowIntansity;
+				//ambient *= _HalfLambert_var;
 				//ambient *= dot(worldNormal, halfDir);
 				
 				//return getLerpShadow(lerpShadow,lightDir);
@@ -642,20 +672,45 @@ Shader "Custom/Surface/Surface-NPR"
 				//float3 F = lerp(pow((1 - max(vh, 0)),5), 1, F0);//是hv不是nv
 				float3 F = F0 + (1 - F0) * exp2((-5.55473 * vh - 6.98316) * vh);
 
-				
+				//_1st_ShadeColor,_2st_ShadeColor;
 				//漫反射系数
+				UNITY_LIGHT_ATTENUATION(attenuation, i, i.worldPos.xyz);
+				
+				float _HalfLambert_var = 0.5*dot(lerp(i.normal,worldNormal,mask.r),lightDir)+0.5;
+				
+				//_1st_ShadeColor_Step,_1st_ShadeColor_Feather,_2st_ShadeColor_Step,_2st_ShadeColor_Feather;
+				//step(_1st_ShadeColor_Step,_HalfLambert_var)
+				//attenuation = attenuation*0,5+0.5;
+				fixed _1st_shadow = saturate(1.0 + (_HalfLambert_var*attenuation - (_1st_ShadeColor_Step-_1st_ShadeColor_Feather)) / (_1st_ShadeColor_Step - (_1st_ShadeColor_Step-_1st_ShadeColor_Feather)));
+				_1st_shadow = clamp(_1st_shadow,_1st_ShadeIntansty,1);
 
 				
-				fixed diff =  dot(lerp(i.normal,worldNormal,mask.r), lightDir);
-				diff = (diff * 0.5 + 0.5);
-				
+
+				fixed _2st_shadow = saturate((1.0 + ( (_HalfLambert_var*attenuation - (_2st_ShadeColor_Step-_2st_ShadeColor_Feather))) / (_2st_ShadeColor_Step - (_2st_ShadeColor_Step-_2st_ShadeColor_Feather))));
+				_2st_shadow = clamp(_2st_shadow,_2st_ShadeIntansty,1);
+
+//fixed4 _1nd_ShadeColor,_2st_ShadeColor;
+				fixed3 diff = lerp(_2st_ShadeColor,_1st_ShadeColor,
+								saturate((1.0 + ((_HalfLambert_var - (_2st_ShadeColor_Step-_2st_ShadeColor_Feather))) / (_2st_ShadeColor_Step - (_2st_ShadeColor_Step-_2st_ShadeColor_Feather))))
+								);
+
+				diff = lerp(diff,albedo,_1st_shadow);
+
+				//return fixed4(diff,1);
+
+
+				//fixed diff =  dot(lerp(i.normal,worldNormal,mask.r), lightDir);
+				//diff = (diff * 0.5 + 0.5);
+				//fixed diff = _HalfLambert_var;
 				//选择使用哪种diffuse ramp方式
-				fixed3 rampColor = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
-				fixed3 diffuse = rampColor;//lerp(rampColor,albedo,mask.b).rgb;
+				//fixed3 rampColor = lerp(getTexRamp(albedo,diff), getColorRamp(albedo,diff), _RampSwitch);
+				fixed3 diffuse = _LightColor0.rgb * albedo *diff;//rampColor;//lerp(rampColor,albedo,mask.b).rgb;
 				//叠加金属度,金属情况下,漫反射为0
 				diffuse *= lerp(1,(1 - F)*(1-_Metallic), mask.r);
 				//return fixed4(diffuse,1);
  				
+
+				
 
 				//合并 基础色 漫反射 高光色 alpha
 				fixed4 finalColor = fixed4(ambient * diffuse + finalSpecular, _Color.a);
@@ -681,7 +736,7 @@ Shader "Custom/Surface/Surface-NPR"
 				//内描边
 				finalColor.rgb += IndirectResult;
 				finalColor.rgb *= lerp(1-_InnerIntansity, 1, mask.a);
-				finalColor.rgb+= emissionColor;
+				finalColor.rgb+= emissionColor*_EmissionIntansty;
 
 				finalColor.rgb =  lerp(finalColor, _FresnelBlackCol.rgb, fresnelblack);
 				finalColor.rgb =  lerp(finalColor, _FresnelCol.rgb, fresnel);

@@ -44,7 +44,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EyeTex:
-        m_Texture: {fileID: 2800000, guid: 308dedb3d177e4f23bee24999d6fb746, type: 3}
+        m_Texture: {fileID: 2800000, guid: 514ea7546cbfa0a49bed5127a3756730, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LUT:
@@ -116,6 +116,7 @@ Material:
     - _SpecularHighlights: 1
     - _SpecularScale: 0.99
     - _SrcBlend: 1
+    - _Threshold: 0.005
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:

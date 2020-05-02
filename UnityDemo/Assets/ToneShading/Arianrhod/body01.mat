@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: body01
   m_Shader: {fileID: 4800000, guid: e2418cff757d4a343822bcb6d5b36ac3, type: 3}
-  m_ShaderKeywords: _LIGHTDIRNORMALSWITCH_ON _OUTLINE_POS _RAMPSWITCH_ON
+  m_ShaderKeywords: _LIGHTDIRNORMALSWITCH_ON _OUTLINE_NML _RAMPSWITCH_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -92,6 +92,14 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _1st_ShadeColor_Feather: 0.027
+    - _1st_ShadeColor_Step: 0.714
+    - _1st_ShadeIntansty: 0.5
+    - _2nd_ShadeColor_Feather: 0.0001
+    - _2nd_ShadeColor_Step: 0
+    - _2st_ShadeColor_Feather: 0.0001
+    - _2st_ShadeColor_Step: 0.5
+    - _2st_ShadeIntansty: 0.5
     - _AOScale: 0
     - _Alpha: 0
     - _Beta: 0
@@ -104,6 +112,7 @@ Material:
     - _DarkIntensity: 1
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _EmissionIntansty: 12.49
     - _Farthest_Distance: 1000
     - _FresnelBase: 1
     - _FresnelBase2: 1
@@ -136,11 +145,11 @@ Material:
     - _Is_OutlineTex: 0
     - _LerpShadowIntansity: 1
     - _LightDirNormalSwitch: 1
-    - _LightIntansity: 0.5
+    - _LightIntansity: 0.71
     - _Metallic: 0
     - _Mode: 0
     - _Nearest_Distance: 0.5
-    - _OUTLINE: 1
+    - _OUTLINE: 0
     - _OcclusionStrength: 1
     - _Offset_Z: 0
     - _OutlineColorIntensity: 1
@@ -162,6 +171,10 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
+    - _1nd_ShadeColor: {r: 0, g: 1, b: 0, a: 1}
+    - _1st_ShadeColor: {r: 0, g: 1, b: 0.013520718, a: 1}
+    - _2nd_ShadeColor: {r: 1, g: 0, b: 0, a: 1}
+    - _2st_ShadeColor: {r: 1, g: 0, b: 0, a: 1}
     - _AOColor: {r: 1, g: 1, b: 1, a: 1}
     - _B: {r: 0, g: 0, b: 0, a: 1}
     - _BlackFresnelCol2: {r: 1, g: 1, b: 1, a: 1}
@@ -177,6 +190,6 @@ Material:
     - _G: {r: 0, g: 0, b: 0, a: 1}
     - _GrayColor: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _Outline_Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _Outline_Color: {r: 0, g: 0, b: 0, a: 1}
     - _R: {r: 0, g: 0, b: 0, a: 1}
     - _SpecularColor: {r: 0.9339623, g: 0.9097133, b: 0.69166076, a: 1}

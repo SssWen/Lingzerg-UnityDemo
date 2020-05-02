@@ -4,6 +4,7 @@
     {
         //_MainTex ("Texture", 2D) = "white" {}
         _EyeTex ("Texture", 2D) = "white" {}
+        _Threshold ("Threshold", Float) = 0.003
         _Color("Bright", Color) = (1, 1, 1, 1)
     }
     SubShader
@@ -49,6 +50,9 @@
             sampler2D _EyeTex;//_MainTex,
             float4  _EyeTex_ST;//_MainTex_ST,
             fixed4 _Color;
+
+            half _Threshold;
+
             Interpolators vert (VertexData v)
             {
                 Interpolators i;
@@ -58,13 +62,13 @@
                 fixed dis = distance(fixed3(0,0,0),worldLightDir);
                 fixed edge = sqrt(worldLightDir.x*worldLightDir.x+worldLightDir.z*worldLightDir.z);
                 fixed lightcos = edge/dis;
-                v.vertex.xz = v.vertex.xz+lightcos*worldLightDir.xz*0.003;
+                v.vertex.xz = v.vertex.xz+lightcos*worldLightDir.xz*_Threshold;
 
 //v.vertex.x = v.vertex.x*sin(_Time.y);
 //v.vertex.z = v.vertex.z*sin(_Time.y);
+                
                 i.vertex = UnityObjectToClipPos(v.vertex);
-                //XZ
-
+                
                 i.uv = TRANSFORM_TEX(v.uv, _EyeTex);
                 //i.uv2 = TRANSFORM_TEX(v.uv2, _EyeTex);
                 return i;
