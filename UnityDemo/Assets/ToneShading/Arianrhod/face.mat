@@ -92,12 +92,12 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _1st_ShadeColor_Feather: 0.045
+    - _1st_ShadeColor_Feather: 0.01
     - _1st_ShadeColor_Step: 0.676
     - _1st_ShadeIntansty: 0.531
     - _2nd_ShadeColor_Feather: 0.0001
     - _2nd_ShadeColor_Step: 0.5
-    - _2st_ShadeColor_Feather: 0.12
+    - _2st_ShadeColor_Feather: 0.01
     - _2st_ShadeColor_Step: 0.497
     - _2st_ShadeIntansty: 0.5
     - _AOScale: 0.307
