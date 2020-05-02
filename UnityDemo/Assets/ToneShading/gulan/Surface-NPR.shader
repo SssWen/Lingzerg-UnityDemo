@@ -72,32 +72,31 @@ Shader "Custom/Surface/Surface-NPR"
 		_1st_ShadeColor_Step ("1st ShadeColor Step", Range(0, 1)) = 0.5
 		_1st_ShadeIntansty ("1st Shade Intansty", Range(0, 1)) = 0.5
 		_1st_ShadeColor_Feather ("1st_ShadeColor_Feather", Range(0.0001, 1)) = 0.0001
-		_1st_ShadeColor ("1nd ShadeColor", Color) = (0,1,0,1)
+		_1st_ShadeColor ("1nd ShadeColor", Color) = (0.5,0.5,0.5,1)
 
         _2st_ShadeColor_Step ("2nd_ShadeColor_Step", Range(0, 1)) = 0
 		_2st_ShadeIntansty ("2st Shade Intansty", Range(0, 1)) = 0.4
         _2st_ShadeColor_Feather ("2nd_ShadeColor_Feather", Range(0.0001, 1)) = 0.0001
-		_2st_ShadeColor ("2nd ShadeColor", Color) = (1,0,0,1)
+		_2st_ShadeColor ("2nd ShadeColor", Color) = (0.2,0.2,0.2,1)
 
 		[Space(50)]
-		[Header(ColorRamp)]
 		_Color("Base Color", Color) = (1, 1, 1, 1)
 		//_ColorIntensity("Color Intensity", Range(0,1)) = 0.2
 
-		[Space(10)]
-		_BrightColor("Bright", Color) = (1, 1, 1, 1)
-		_BrightIntensity("Bright Intensity", Range(0,2)) = 0.2
-		[Space(10)]
-		_GrayColor("Gray", Color) = (1, 1, 1, 1)
-		_GrayIntensity("Gray Intensity", Range(0,1)) = 0.2
-		[Space(10)]
-		_DarkColor("Dark", Color) = (1, 1, 1, 1)
-		_DarkIntensity("Dark Intensity", Range(0,1)) = 0.2
+		// [Space(10)]
+		// _BrightColor("Bright", Color) = (1, 1, 1, 1)
+		// _BrightIntensity("Bright Intensity", Range(0,2)) = 0.2
+		// [Space(10)]
+		// _GrayColor("Gray", Color) = (1, 1, 1, 1)
+		// _GrayIntensity("Gray Intensity", Range(0,1)) = 0.2
+		// [Space(10)]
+		// _DarkColor("Dark", Color) = (1, 1, 1, 1)
+		// _DarkIntensity("Dark Intensity", Range(0,1)) = 0.2
 		
-		[Space(50)]
-		[Header(TexRamp)]
-		_Ramp ("Ramp Texture", 2D) = "white" {}
-		_RampIn("Ramp In", Range(0,1)) = 0.2
+		// [Space(50)]
+		// [Header(TexRamp)]
+		// _Ramp ("Ramp Texture", 2D) = "white" {}
+		// _RampIn("Ramp In", Range(0,1)) = 0.2
 
 		[Space(50)]
 		[Header(Indirect Light)]

@@ -92,13 +92,13 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _1st_ShadeColor_Feather: 0.067
-    - _1st_ShadeColor_Step: 0.6
+    - _1st_ShadeColor_Feather: 0.045
+    - _1st_ShadeColor_Step: 0.676
     - _1st_ShadeIntansty: 0.531
     - _2nd_ShadeColor_Feather: 0.0001
     - _2nd_ShadeColor_Step: 0.5
-    - _2st_ShadeColor_Feather: 0.134
-    - _2st_ShadeColor_Step: 0.52
+    - _2st_ShadeColor_Feather: 0.12
+    - _2st_ShadeColor_Step: 0.497
     - _2st_ShadeIntansty: 0.5
     - _AOScale: 0.307
     - _Alpha: 1
@@ -166,9 +166,9 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _1nd_ShadeColor: {r: 0, g: 1, b: 0, a: 1}
-    - _1st_ShadeColor: {r: 0.08334541, g: 1, b: 0, a: 1}
+    - _1st_ShadeColor: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
     - _2nd_ShadeColor: {r: 1, g: 0, b: 0, a: 1}
-    - _2st_ShadeColor: {r: 1, g: 0, b: 0, a: 1}
+    - _2st_ShadeColor: {r: 0.122641504, g: 0.122641504, b: 0.122641504, a: 1}
     - _AOColor: {r: 0, g: 0, b: 0, a: 1}
     - _B: {r: 0, g: 0, b: 0, a: 1}
     - _BrightColor: {r: 1, g: 1, b: 1, a: 1}

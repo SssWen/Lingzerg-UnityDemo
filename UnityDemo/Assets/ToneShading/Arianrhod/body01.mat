@@ -172,9 +172,9 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _1nd_ShadeColor: {r: 0, g: 1, b: 0, a: 1}
-    - _1st_ShadeColor: {r: 0, g: 1, b: 0.013520718, a: 1}
+    - _1st_ShadeColor: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
     - _2nd_ShadeColor: {r: 1, g: 0, b: 0, a: 1}
-    - _2st_ShadeColor: {r: 1, g: 0, b: 0, a: 1}
+    - _2st_ShadeColor: {r: 0.30588236, g: 0.30588236, b: 0.30588236, a: 1}
     - _AOColor: {r: 1, g: 1, b: 1, a: 1}
     - _B: {r: 0, g: 0, b: 0, a: 1}
     - _BlackFresnelCol2: {r: 1, g: 1, b: 1, a: 1}
